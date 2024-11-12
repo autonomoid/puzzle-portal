@@ -294,3 +294,32 @@ button:active {
   margin-bottom: 10px;
   text-shadow: 0 0 5px #0f0, 0 0 10px #00ff00;
 }
+
+.vertical-panel ul li {
+  animation: flicker 3s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.vertical-panel {
+  scroll-behavior: smooth;
+}
+
+.success {
+  color: #0f0; /* Green for successful actions */
+}
+
+.warning {
+  color: #ff0; /* Yellow for warnings */
+}
+
+.exfil {
+  color: #ff4500; /* Bright orange for data exfiltration */
+}
+
+.cleanup {
+  color: #808080; /* Gray for cleanup logs */
+}
