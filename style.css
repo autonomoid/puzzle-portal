@@ -1,46 +1,227 @@
+.card {
+  background-color: rgba(26, 25, 25, 0.5);
+  border: 2px solid #0f0; /* Green hacker border */
+  color: #fff; /* White text inside cards */
+  box-shadow: 0 0 10px #0f0, 0 0 20px #0ff; /* Combined neon glow */
+}
+
+#answer {
+  caret-color: #0f0; /* Green blinking caret */
+  animation: flicker 1.5s infinite; /* Subtle flicker for terminal feel */
+}
+
+@keyframes flicker {
+  0%, 100% { box-shadow: 0 0 10px #0f0; }
+  50% { box-shadow: 0 0 20px #0f0; }
+}
+
 body, html {
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.0);;
-    color: #0f0;
+    background-color: rgba(0, 0, 0, 0.0);
     overflow: hidden;
+    color: #0f0; /* Neon green text */
+    font-family: 'Courier New', monospace; /* Hacker-style font */
+}
+
+body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%; /* Extra width for smooth movement */
+  height: 200%; /* Extra height for smooth wave coverage */
+  background: radial-gradient(circle, rgba(255, 0, 255, 0.3) 25%, transparent 60%),
+              radial-gradient(circle, rgba(0, 255, 255, 0.2) 15%, transparent 50%);
+  background-size: 50% 50%; /* Size of each wave */
+  background-repeat: repeat;
+  z-index: 0;
+  transform: translate(-50%, -50%);
+  animation: move-wave 10s linear infinite, scale-wave 5s ease-in-out infinite;
+  opacity: 0.3; /* Subtle wave effect */
+}
+
+body::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 0, 0, 0.2) 30%, transparent 70%);
+  background-size: 75% 75%;
+  z-index: 0;
+  animation: move-wave 15s linear infinite reverse, scale-wave 7s ease-in-out infinite;
+  opacity: 0.3; /* Subtle wave effect */
+}
+
+@keyframes move-wave {
+  0% {
+    background-position: 0% 0%;
   }
-  
-  .hacker-card {
-    background-color: #111;
-    border: 1px solid #0f0;
-    max-height: 50vhthis digital painting depicts a serene landscape with tall trees, rocky cliffs, and a winding river. the art style is realistic, with detailed textures and colors that bring the scene to life. the mood of the painting is peaceful and contemplative, conveying a sense of tranquility and awe at the beauty of nature. there are no characters in the image, but the trees and rocks seem to have a life of their own, with some reaching towards the sky and others leaning against the cliffs. the overall effect is one of quiet contemplation and appreciation for the natural world...;
-    overflow-y: auto;
+  100% {
+    background-position: 100% 100%;
   }
-  
-  .img-fluid {
-    max-height: 100%;
+}
+
+@keyframes scale-wave {
+  0%, 100% {
+    transform: scale(1) translate(-50%, -50%);
   }
-  
-  .audio-control {
-    position: fixed;
-    top: 10px;
-    right: 10px;
+  50% {
+    transform: scale(1.1) translate(-50%, -50%);
   }
+}
+
   
-  .audio-control button {
-    background: none;
-    border: none;
-    color: #0f0;
-    font-size: 24px;
+.hacker-card {
+  background-color: rgba(26, 25, 25, 0.5);
+  border: 1px solid #0f0;
+  max-height: 50;
+  overflow-y: auto;
+  z-index: 1;
+}
+
+.img-fluid {
+  max-height: 100%;
+}
+
+.audio-control {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+}
+
+.audio-control button {
+  background: none;
+  border: none;
+  color: #0f0;
+  font-size: 24px;
+  font-family: 'Courier New', monospace;
+  border: 2px solid #0f0;
+  padding: 10px;
+  box-shadow: 0 0 10px #0f0;
+  transition: transform 0.3s, box-shadow 0.3s;
+  z-index: 1;
+}
+
+.audio-control button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px #0f0, 0 0 40px #0f0; /* Stronger glow */
+}
+
+.audio-control button:active {
+  transform: scale(0.95); /* Press-in effect */
+}
+
+.flickering-button {
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  animation: pulse 1.5s infinite;
+  background-color: #ff007f; /* Neon pink */
+  padding: 10px 20px;
+  font-size: 16px;
+  transition: transform 0.2s;
+}
+
+.flickering-button:hover {
+  transform: scale(1.1);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f;
   }
-  
-  #audio-control i:hover {
-    color: #fff;
+  50% {
+    box-shadow: 0 0 30px #ff007f, 0 0 60px #ff007f;
   }
-  
-  #matrix {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    opacity: 0.8;
-    background-color: rgba(0, 0, 0, 1.0);
+  100% {
+    box-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f;
   }
-  
+}
+
+#matrix {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.8;
+  background-color: rgba(0, 0, 0, 1.0);
+}
+
+.neon-text {
+  animation: neon-flicker 2s infinite, neon-color-shift 5s infinite;
+}
+
+@keyframes neon-color-shift {
+  0% { text-shadow: 0 0 5px #0f0, 0 0 10px #0f0, 0 0 20px #00ff00; }
+  50% { text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 20px #0f0; }
+  100% { text-shadow: 0 0 5px #0f0, 0 0 10px #0f0, 0 0 20px #00ff00; }
+}
+
+@keyframes neon-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 0 0 5px #0f0, 0 0 10px #0f0, 0 0 20px #00ff00, 0 0 40px #00ff00;
+  }
+  20%, 24%, 55% {
+    text-shadow: 0 0 2px #0f0, 0 0 4px #0f0, 0 0 8px #00ff00, 0 0 16px #00ff00;
+  }
+}
+
+/* Style the input field */
+#answer {
+  font-family: 'Courier New', monospace; /* Monospaced hacker font */
+  font-size: 16px;
+  color: #0f0; /* Neon green text */
+  background-color: black; /* Dark hacker background */
+  border: 2px solid #0f0; /* Green glowing border */
+  padding: 10px;
+  border-radius: 5px; /* Slight rounding for aesthetics */
+  outline: none; /* Remove focus outline */
+  box-shadow: 0 0 10px #0f0; /* Neon glow effect */
+  transition: box-shadow 0.3s, background-color 0.3s; /* Smooth transitions */
+}
+
+#answer:focus {
+  background-color: #111; /* Slightly lighter when focused */
+  box-shadow: 0 0 20px #0f0, 0 0 40px #0f0; /* Stronger glow on focus */
+}
+
+#answer::placeholder {
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+  opacity: 0.8;
+}
+
+/* Style the submit button */
+button {
+  font-family: 'Courier New', monospace; /* Monospaced hacker font */
+  font-size: 16px;
+  color: #fff; /* White text */
+  background: linear-gradient(90deg, #ff007f, #7f00ff); /* Neon pink/purple gradient */
+  border: 2px solid #ff007f; /* Outline matching gradient */
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-transform: uppercase; /* All caps for a hacker feel */
+  cursor: pointer;
+  box-shadow: 0 0 10px #ff007f, 0 0 20px #7f00ff; /* Neon glow */
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+button:hover {
+  transform: scale(1.1); /* Zoom in slightly */
+  background: linear-gradient(90deg, #ff007f, #ff00ff); /* Pink to purple glow */
+  box-shadow: 0 0 20px #ff007f, 0 0 40px #ff00ff; /* Brighter glow */
+}
+
+button:focus {
+  outline: none; /* Remove focus outline for cleaner look */
+  box-shadow: 0 0 30px #ff007f, 0 0 60px #ff00ff; /* Stronger glow when focused */
+}
+
+button:active {
+  transform: scale(0.95); /* Slight press-in effect */
+  box-shadow: 0 0 10px #ff007f, 0 0 20px #7f00ff; /* Reset glow */
+}

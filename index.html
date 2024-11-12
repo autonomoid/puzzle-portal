@@ -10,19 +10,21 @@
 <body>
   <div class="container">
     <div class="card hacker-card">
+    <h1 class="neon-text">Challenge 1</h1>
+
       <div class="card-body">
         <img src="images/challenge1.jpg" id="challenge-image" class="img-fluid">
       </div>
     </div>
     <div class="card mt-3">
-      <div class="card-body">
-        <input type="text" id="answer" class="form-control" placeholder="Enter your answer">
-        <button onclick="submitAnswer()" class="btn btn-primary mt-2">Submit</button>
-      </div>
+        <div class="card-body">
+            <input type="text" id="answer" class="form-control" placeholder="Enter your answer">
+            <button onclick="submitAnswer()" class="btn btn-primary mt-2">Submit</button>
+        </div>
     </div>
   </div>
   <div class="audio-control">
-    <button onclick="toggleAudio()"><i class="fas fa-play"></i></button>
+    <button onclick="toggleAudio()"><i class="flickering-button fas fa-play"></i></button>
   </div>
   <canvas id="matrix"></canvas>
   <script src="script.js"></script>
