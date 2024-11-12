@@ -152,5 +152,5 @@ function showWhiteRabbit() {
   // Repeatedly show the rabbit at random intervals
   setInterval(() => {
     showWhiteRabbit();
-  }, 20000); // Adjust interval (5000ms = 5 seconds)
+  }, 60000); // Adjust interval (5000ms = 5 seconds)
   
