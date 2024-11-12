@@ -127,3 +127,30 @@ function drawMatrix() {
 
 // Animate the matrix effect
 setInterval(drawMatrix, 50);
+
+function showWhiteRabbit() {
+    const rabbit = document.getElementById('white-rabbit');
+    const container = document.getElementById('rabbit-container');
+  
+    // Generate random position within the container
+    const randomX = Math.random() * (window.innerWidth - 50); // Ensure the rabbit stays within screen bounds
+    const randomY = Math.random() * (window.innerHeight - 50);
+  
+    // Position the rabbit
+    rabbit.style.left = `${randomX}px`;
+    rabbit.style.top = `${randomY}px`;
+  
+    // Fade in the rabbit
+    rabbit.style.opacity = 1;
+  
+    // Fade out after a delay
+    setTimeout(() => {
+      rabbit.style.opacity = 0;
+    }, 4000); // Rabbit stays visible for 2 seconds
+  }
+  
+  // Repeatedly show the rabbit at random intervals
+  setInterval(() => {
+    showWhiteRabbit();
+  }, 20000); // Adjust interval (5000ms = 5 seconds)
+  

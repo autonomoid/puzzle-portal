@@ -235,3 +235,19 @@ button:active {
   transform: scale(0.95); /* Slight press-in effect */
   box-shadow: 0 0 10px #ff007f, 0 0 20px #7f00ff; /* Reset glow */
 }
+
+#rabbit-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Allow interactions through the container */
+  z-index: 10; /* Keep it above the background */
+}
+
+#white-rabbit {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 4s ease-in-out; /* Smooth fade-in and fade-out */
+}
