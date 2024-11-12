@@ -251,3 +251,46 @@ button:active {
   opacity: 0;
   transition: opacity 4s ease-in-out; /* Smooth fade-in and fade-out */
 }
+
+.vertical-panel {
+  position: fixed;
+  top: 0;
+
+  background-color: rgba(26, 25, 25, 0.5);
+  border: 2px solid #0f0;
+  box-shadow: 0 0 10px #0f0, 0 0 20px #00ff00;
+  overflow-y: auto;
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+  padding: 10px;
+  z-index: 2; /* Keep above the background matrix effect */
+  margin: 30px;
+}
+
+.left-panel {
+  left: 0;
+  width: 570px;
+}
+
+.right-panel {
+  right: 0;
+  margin-right: 120px !important;
+  width: 480px;
+}
+
+.vertical-panel h3 {
+  font-size: 18px;
+  text-align: center;
+  margin-bottom: 10px;
+  text-shadow: 0 0 5px #0f0, 0 0 10px #00ff00;
+}
+
+.vertical-panel ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.vertical-panel ul li {
+  margin-bottom: 10px;
+  text-shadow: 0 0 5px #0f0, 0 0 10px #00ff00;
+}

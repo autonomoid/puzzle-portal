@@ -154,3 +154,48 @@ function showWhiteRabbit() {
     showWhiteRabbit();
   }, 60000); // Adjust interval (5000ms = 5 seconds)
   
+  // Populate system and network information dynamically
+function getSystemInfo() {
+    const systemInfo = document.getElementById('system-info');
+    const networkInfo = document.getElementById('network-info');
+  
+    // System information
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform;
+    const language = navigator.language;
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+  
+    systemInfo.innerHTML = `
+      <li><strong>Platform:</strong> ${platform}</li>
+      <li><strong>User Agent:</strong> ${userAgent}</li>
+      <li><strong>Language:</strong> ${language}</li>
+      <li><strong>Screen:</strong> ${screenWidth} x ${screenHeight}</li>
+    `;
+  
+    // Network information
+    const connection = navigator.connection || {};
+    const downlink = connection.downlink || 'Unknown';
+    const effectiveType = connection.effectiveType || 'Unknown';
+  
+    networkInfo.innerHTML = `
+      <li><strong>IP Address:</strong> Fetching...</li>
+      <li><strong>Downlink Speed:</strong> ${downlink} Mbps</li>
+      <li><strong>Network Type:</strong> ${effectiveType}</li>
+    `;
+  
+    // Fetch IP address
+    fetch('https://api64.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => {
+        const ipItem = document.querySelector('#network-info li:first-child');
+        ipItem.innerHTML = `<strong>IP Address:</strong> ${data.ip}`;
+      })
+      .catch(err => {
+        console.error('Error fetching IP:', err);
+      });
+  }
+  
+  // Run the function on page load
+  getSystemInfo();
+  
