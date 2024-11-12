@@ -401,7 +401,7 @@ function showWhiteRabbit() {
   
   // Parameters
   const sphereRadius = 100;
-  const numNodes = 10;
+  const numNodes = 20;
   const fov = 300; // Field of view
   let nodes = [];
   let activeRoute = [];
@@ -457,8 +457,11 @@ function showWhiteRabbit() {
     const { attackerNode, victimNode } = generateNodes();
     activeRoute = [attackerNode];
   
-    // Add intermediate nodes
-    while (activeRoute.length < 5) {
+    // Determine a random route length between 3 and 7
+     const routeLength = Math.floor(Math.random() * 5) + 3; // Random number between 3 and 7
+
+    // Add intermediate nodes based on the random route length
+    while (activeRoute.length < routeLength) {
       const nextNode = nodes.find((node) => !activeRoute.includes(node) && node !== victimNode);
       if (nextNode) activeRoute.push(nextNode);
     }
@@ -542,23 +545,46 @@ function showWhiteRabbit() {
     return { x: x2D, y: y2D, scale: perspective };
   }
   
-  // Draw nodes
-  function drawNodes() {
-    nodes.forEach((node) => {
+
+// Draw nodes with dynamic colors based on the route state
+function drawNodes() {
+    nodes.forEach((node, index) => {
       const { x, y, scale } = project3DTo2D(node);
-      const size = Math.max(2, 8 * scale);
+      const size = Math.max(2, 8 * scale); // Scale node size with perspective
   
-      ctx2.fillStyle = node === activeRoute[0] ? 'red' : node === activeRoute[activeRoute.length - 1] ? 'blue' : 'gray';
+      // Determine the color based on the node's state
+      let color = 'gray'; // Default for unvisited nodes
+      if (node === activeRoute[0]) {
+        color = 'red'; // Attacker node
+      } else if (node === activeRoute[activeRoute.length - 1]) {
+        color = 'blue'; // Victim node
+      } else {
+        // Intermediate nodes
+        const nodeIndexInRoute = activeRoute.indexOf(node);
+        if (nodeIndexInRoute !== -1) {
+          if (nodeIndexInRoute <= buildIndex) {
+            color = '#0f0'; // Green for nodes in the built route
+          }
+          if (nodeIndexInRoute >= traceIndex) {
+            color = 'red'; // Red for traced nodes
+          }
+        }
+      }
+  
+      // Draw node
+      ctx2.fillStyle = color;
       ctx2.beginPath();
       ctx2.arc(x, y, size, 0, 2 * Math.PI);
       ctx2.fill();
   
+      // Draw label
       ctx2.fillStyle = 'cyan';
       ctx2.font = `${Math.max(8, 12 * scale)}px Courier New`;
       ctx2.textAlign = 'center';
       ctx2.fillText(node.name, x, y - size - 5);
     });
   }
+  
   
   // Draw the route
   function drawRoute() {
