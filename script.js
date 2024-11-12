@@ -388,141 +388,215 @@ function showWhiteRabbit() {
 
   
   const canvas2 = document.getElementById('canvas2');
-const ctx2 = canvas2.getContext('2d');
-
-// Resize canvas2 to fit the left panel
-function resizeCanvas2() {
-  const panel = document.querySelector('.left-panel');
-  canvas2.width = panel.offsetWidth;
-  canvas2.height = 300; // Match the height set in CSS
-}
-resizeCanvas2();
-window.addEventListener('resize', resizeCanvas2);
-
-// Generate a set of nodes with public IPs
-function generateNodes() {
-  const totalNodes = 8; // Number of nodes excluding attacker and victim
-  return Array.from({ length: totalNodes }, (_, i) => ({
-    id: i + 1,
-    x: Math.random() * canvas2.width * 0.8 + canvas2.width * 0.1, // Ensure nodes stay within bounds
-    y: Math.random() * canvas2.height * 0.8 + canvas2.height * 0.1,
-    name: `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
-    isAttacker: false,
-    isVictim: false,
-  }));
-}
-
-// Place attacker and victim nodes at opposite ends
-const attackerNode = {
-  id: 999,
-  x: 30, // Far left
-  y: canvas2.height / 2,
-  name: 'Attacker',
-  isAttacker: true,
-  isVictim: false,
-};
-
-const victimNode = {
-  id: 1000,
-  x: canvas2.width - 30, // Far right
-  y: canvas2.height / 2,
-  name: 'Victim',
-  isAttacker: false,
-  isVictim: true,
-};
-
-let nodes = [attackerNode, victimNode]; // Initial nodes array
-let activeRoute = [];
-let traceIndex = 0;
-
-// Generate new nodes and routes
-function resetNodesAndRoute() {
-  const newNodes = generateNodes();
-  nodes = [attackerNode, victimNode, ...newNodes];
-  generateRoute();
-}
-
-// Draw nodes
-function drawNodes2() {
-  nodes.forEach((node) => {
-    ctx2.fillStyle = node.isAttacker ? 'orange' : node.isVictim ? 'red' : 'white';
-    ctx2.beginPath();
-    ctx2.arc(node.x, node.y, 8, 0, 2 * Math.PI);
-    ctx2.fill();
-
-    ctx2.fillStyle = 'cyan';
-    ctx2.textAlign = 'center';
-    ctx2.font = '12px Courier New';
-    ctx2.fillText(node.name, node.x, node.y - 10);
-  });
-}
-
-// Draw edges
-function drawEdges2() {
-  ctx2.lineWidth = 2;
-
-  activeRoute.forEach((edge, index) => {
-    const fromNode = getNodeById(edge.from);
-    const toNode = getNodeById(edge.to);
-
-    ctx2.strokeStyle = index <= traceIndex ? 'red' : '#0f0';
-    ctx2.beginPath();
-    ctx2.moveTo(fromNode.x, fromNode.y);
-    ctx2.lineTo(toNode.x, toNode.y);
-    ctx2.stroke();
-  });
-}
-
-// Utility to find node by ID
-function getNodeById(id) {
-  return nodes.find((node) => node.id === id);
-}
-
-// Generate a new route through proxies
-function generateRoute() {
-  activeRoute = [];
-  traceIndex = 0; // Reset trace index
-
-  let currentNode = attackerNode;
-  const proxies = [];
-  while (proxies.length < 3) {
-    const nextNode = nodes[Math.floor(Math.random() * nodes.length)];
-    if (
-      nextNode !== currentNode &&
-      nextNode !== victimNode &&
-      !proxies.includes(nextNode)
-    ) {
-      proxies.push(nextNode);
+  const ctx2 = canvas2.getContext('2d');
+  
+  // Resize canvas2 to fit the left panel
+  function resizeCanvas2() {
+    const panel = document.querySelector('.left-panel');
+    canvas2.width = panel.offsetWidth;
+    canvas2.height = 300; // Match the height set in CSS
+  }
+  resizeCanvas2();
+  window.addEventListener('resize', resizeCanvas2);
+  
+  // Parameters
+  const sphereRadius = 100;
+  const numNodes = 10;
+  const fov = 300; // Field of view
+  let nodes = [];
+  let activeRoute = [];
+  let traceIndex = -1; // No segments traced initially
+  let buildIndex = 0; // Tracks the green route build-up
+  let rotating = false; // Is the camera currently rotating?
+  
+  // Camera rotation angles
+  let cameraRotationX = 0; // Camera rotation around the X-axis
+  let cameraRotationY = 0; // Camera rotation around the Y-axis
+  let targetCameraRotationX = 0; // Target rotation for X-axis
+  let targetCameraRotationY = 0; // Target rotation for Y-axis
+  let rotationStep = 0.01; // Fine rotation step
+  
+  // Generate nodes on the sphere
+  function generateNodes() {
+    nodes = Array.from({ length: numNodes }, (_, i) => {
+      const theta = Math.random() * Math.PI * 2; // Longitude
+      const phi = Math.acos(2 * Math.random() - 1); // Latitude
+      const x = sphereRadius * Math.sin(phi) * Math.cos(theta);
+      const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
+      const z = sphereRadius * Math.cos(phi);
+      return {
+        id: i + 1,
+        x,
+        y,
+        z,
+        name: `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
+      };
+    });
+  
+    // Assign attacker and victim nodes
+    const attackerNode = nodes[0];
+    const victimNode = nodes[nodes.length - 1];
+    attackerNode.name = 'Attacker';
+    victimNode.name = 'Victim';
+    return { attackerNode, victimNode };
+  }
+  
+  // Generate a new route
+  function generateRoute() {
+    const { attackerNode, victimNode } = generateNodes();
+    activeRoute = [attackerNode];
+  
+    // Add intermediate nodes
+    while (activeRoute.length < 5) {
+      const nextNode = nodes.find((node) => !activeRoute.includes(node) && node !== victimNode);
+      if (nextNode) activeRoute.push(nextNode);
+    }
+    activeRoute.push(victimNode);
+  
+    traceIndex = -1; // Reset tracing progress
+    buildIndex = 0;  // Reset green route build-up
+    rotating = false; // Stop any rotation
+    cameraRotationX = 0; // Reset camera to default
+    cameraRotationY = 0;
+  }
+  
+  // Project 3D points onto 2D canvas with camera rotation
+  function project3DTo2D(node) {
+    // Apply camera rotation to node positions
+    const cosX = Math.cos(cameraRotationX);
+    const sinX = Math.sin(cameraRotationX);
+    const cosY = Math.cos(cameraRotationY);
+    const sinY = Math.sin(cameraRotationY);
+  
+    // Rotate around X-axis (vertical tilt)
+    let y = node.y * cosX - node.z * sinX;
+    let z = node.y * sinX + node.z * cosX;
+  
+    // Rotate around Y-axis (horizontal pan)
+    let x = node.x * cosY - z * sinY;
+    z = node.x * sinY + z * cosY;
+  
+    // Perspective projection
+    const perspective = fov / (fov + z);
+    const x2D = canvas2.width / 2 + x * perspective;
+    const y2D = canvas2.height / 2 - y * perspective; // Invert Y for canvas coordinates
+  
+    return { x: x2D, y: y2D, scale: perspective };
+  }
+  
+  // Draw nodes
+  function drawNodes() {
+    nodes.forEach((node) => {
+      const { x, y, scale } = project3DTo2D(node);
+      const size = Math.max(2, 8 * scale); // Scale node size with perspective
+  
+      // Draw node
+      ctx2.fillStyle = node === activeRoute[0] ? 'red' : node === activeRoute[activeRoute.length - 1] ? 'blue' : 'gray';
+      ctx2.beginPath();
+      ctx2.arc(x, y, size, 0, 2 * Math.PI);
+      ctx2.fill();
+  
+      // Draw label
+      ctx2.fillStyle = 'cyan';
+      ctx2.font = `${Math.max(8, 12 * scale)}px Courier New`;
+      ctx2.textAlign = 'center';
+      ctx2.fillText(node.name, x, y - size - 5);
+    });
+  }
+  
+  // Draw the route
+  function drawRoute() {
+    ctx2.lineWidth = 2;
+  
+    for (let i = 0; i < activeRoute.length - 1; i++) {
+      const fromNode = activeRoute[i];
+      const toNode = activeRoute[i + 1];
+      const from2D = project3DTo2D(fromNode);
+      const to2D = project3DTo2D(toNode);
+  
+      // Green for built route, red for traced route
+      if (i <= traceIndex) {
+        ctx2.strokeStyle = 'red';
+      } else if (i < buildIndex) {
+        ctx2.strokeStyle = '#0f0';
+      } else {
+        ctx2.strokeStyle = 'gray';
+      }
+      ctx2.beginPath();
+      ctx2.moveTo(from2D.x, from2D.y);
+      ctx2.lineTo(to2D.x, to2D.y);
+      ctx2.stroke();
     }
   }
-
-  // Route: Attacker -> Proxies -> Victim
-  const routeNodes = [attackerNode, ...proxies, victimNode];
-  for (let i = 0; i < routeNodes.length - 1; i++) {
-    activeRoute.push({ from: routeNodes[i].id, to: routeNodes[i + 1].id });
+  
+  // Smooth rotation to center the target node
+  function rotateCameraToTarget() {
+    const deltaX = targetCameraRotationX - cameraRotationX;
+    const deltaY = targetCameraRotationY - cameraRotationY;
+  
+    if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) {
+      rotating = false; // Stop rotating when close to target
+      return;
+    }
+  
+    cameraRotationX += Math.sign(deltaX) * Math.min(Math.abs(deltaX), rotationStep);
+    cameraRotationY += Math.sign(deltaY) * Math.min(Math.abs(deltaY), rotationStep);
   }
-}
-
-// Simulate tracing the route
-function traceRoute() {
-  if (traceIndex < activeRoute.length) {
-    traceIndex++;
-  } else {
-    resetNodesAndRoute(); // Reset nodes and route after full trace
+  
+  // Calculate target rotation for a node
+  function calculateRotationToNode(node) {
+    const theta = Math.atan2(node.y, node.x);
+    const phi = Math.acos(node.z / sphereRadius);
+  
+    targetCameraRotationX = phi - Math.PI / 2;
+    targetCameraRotationY = theta;
+    rotating = true;
   }
-}
-
-// Animation loop
-function animateCanvas2() {
-  ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-
-  drawEdges2();
-  drawNodes2();
-
-  requestAnimationFrame(animateCanvas2);
-}
-
-// Initialize and run the simulation
-resetNodesAndRoute();
-animateCanvas2();
-setInterval(traceRoute, 2000); // Trace the route segment-by-segment every 2 seconds
+  
+  // Increment green route build-up
+  function incrementBuildRoute() {
+    if (rotating) return; // Wait for rotation to stop
+  
+    if (buildIndex < activeRoute.length - 1) {
+      buildIndex++;
+      calculateRotationToNode(activeRoute[buildIndex]); // Rotate to the next node in the route
+    } else {
+      // Once the route is fully built, start tracing after a short delay
+      setTimeout(() => {
+        setInterval(incrementTraceRoute, 2000); // Start tracing every 2 seconds
+      }, 2000);
+    }
+  }
+  
+  // Increment red trace route
+  function incrementTraceRoute() {
+    if (rotating) return; // Wait for rotation to stop
+  
+    if (traceIndex < activeRoute.length - 2) {
+      traceIndex++;
+      calculateRotationToNode(activeRoute[traceIndex + 1]); // Rotate to the next traced node
+    } else {
+      // After tracing is complete, reset the route after a short delay
+      setTimeout(() => {
+        generateRoute();
+      }, 2000);
+    }
+  }
+  
+  // Animation loop
+  function animateSphere() {
+    ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+  
+    if (rotating) rotateCameraToTarget();
+  
+    drawRoute();
+    drawNodes();
+  
+    requestAnimationFrame(animateSphere);
+  }
+  
+  // Initialize and run the simulation
+  generateRoute();
+  animateSphere();
+  setInterval(incrementBuildRoute, 2000); // Increment route build every 2 seconds
+  
