@@ -385,4 +385,119 @@ function showWhiteRabbit() {
   // Start generating logs
   generateFakeLogs();
   
+
   
+  const canvas2 = document.getElementById('canvas2');
+const ctx2 = canvas2.getContext('2d');
+
+// Resize canvas2 to fit the left panel
+function resizeCanvas2() {
+  const panel = document.querySelector('.left-panel');
+  canvas2.width = panel.offsetWidth;
+  canvas2.height = 300; // Match the height set in CSS
+}
+resizeCanvas2();
+window.addEventListener('resize', resizeCanvas2);
+
+// Generate nodes with public IPs
+const nodes = Array.from({ length: 10 }, (_, i) => ({
+  id: i + 1,
+  x: Math.random() * canvas2.width * 0.8 + canvas2.width * 0.1, // Ensure nodes are inside canvas
+  y: Math.random() * canvas2.height * 0.8 + canvas2.height * 0.1,
+  name: `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
+  isAttacker: false,
+  isVictim: false,
+}));
+
+// Randomly assign attacker and victim
+const attackerNode = nodes[Math.floor(Math.random() * nodes.length)];
+const victimNode = nodes[Math.floor(Math.random() * nodes.length)];
+attackerNode.isAttacker = true;
+victimNode.isVictim = true;
+attackerNode.name = 'Attacker';
+victimNode.name = 'Victim';
+
+// Dynamic route between attacker and victim
+let activeRoute = [];
+let traceIndex = 0;
+
+// Draw nodes
+function drawNodes2() {
+  nodes.forEach((node) => {
+    ctx2.fillStyle = node.isAttacker ? 'orange' : node.isVictim ? 'red' : 'white';
+    ctx2.beginPath();
+    ctx2.arc(node.x, node.y, 8, 0, 2 * Math.PI);
+    ctx2.fill();
+
+    ctx2.fillStyle = 'cyan';
+    ctx2.textAlign = 'center';
+    ctx2.font = '12px Courier New';
+    ctx2.fillText(node.name, node.x, node.y - 10);
+  });
+}
+
+// Draw edges
+function drawEdges2() {
+  ctx2.lineWidth = 2;
+
+  activeRoute.forEach((edge, index) => {
+    const fromNode = getNodeById(edge.from);
+    const toNode = getNodeById(edge.to);
+
+    ctx2.strokeStyle = index <= traceIndex ? 'red' : '#0f0';
+    ctx2.beginPath();
+    ctx2.moveTo(fromNode.x, fromNode.y);
+    ctx2.lineTo(toNode.x, toNode.y);
+    ctx2.stroke();
+  });
+}
+
+// Utility to find node by ID
+function getNodeById(id) {
+  return nodes.find((node) => node.id === id);
+}
+
+// Generate a new route through proxies
+function generateRoute() {
+  activeRoute = [];
+  traceIndex = 0; // Reset trace index
+
+  let currentNode = attackerNode;
+  const proxies = [];
+  while (proxies.length < 3) {
+    const nextNode = nodes[Math.floor(Math.random() * nodes.length)];
+    if (nextNode !== currentNode && nextNode !== victimNode && !proxies.includes(nextNode)) {
+      proxies.push(nextNode);
+    }
+  }
+
+  // Route: Attacker -> Proxies -> Victim
+  const routeNodes = [attackerNode, ...proxies, victimNode];
+  for (let i = 0; i < routeNodes.length - 1; i++) {
+    activeRoute.push({ from: routeNodes[i].id, to: routeNodes[i + 1].id });
+  }
+}
+
+// Simulate tracing the route
+function traceRoute() {
+  if (traceIndex < activeRoute.length) {
+    traceIndex++;
+  } else {
+    generateRoute(); // Reset route after full trace
+  }
+}
+
+// Animation loop
+function animateCanvas2() {
+  ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+
+  drawEdges2();
+  drawNodes2();
+
+  requestAnimationFrame(animateCanvas2);
+}
+
+// Initialize and run the simulation
+generateRoute();
+animateCanvas2();
+setInterval(traceRoute, 2000); // Trace the route segment-by-segment every 2 seconds

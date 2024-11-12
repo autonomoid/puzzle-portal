@@ -352,3 +352,12 @@ button:active {
 .command {
   color: #ffffff; /* White for the typed commands */
 }
+
+#canvas2 {
+  width: 100%; /* Match the panel's width */
+  height: 300px; /* Adjust height based on available space */
+  background-color: rgba(0, 0, 0, 0.5); /* Dark background for the canvas */
+  border: 1px solid #0f0; /* Match the panel's neon green border */
+  margin-top: 10px; /* Space from the system info */
+  box-shadow: 0 0 10px #0f0; /* Add a neon glow effect */
+}
