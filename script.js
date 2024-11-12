@@ -399,27 +399,48 @@ function resizeCanvas2() {
 resizeCanvas2();
 window.addEventListener('resize', resizeCanvas2);
 
-// Generate nodes with public IPs
-const nodes = Array.from({ length: 10 }, (_, i) => ({
-  id: i + 1,
-  x: Math.random() * canvas2.width * 0.8 + canvas2.width * 0.1, // Ensure nodes are inside canvas
-  y: Math.random() * canvas2.height * 0.8 + canvas2.height * 0.1,
-  name: `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
-  isAttacker: false,
+// Generate a set of nodes with public IPs
+function generateNodes() {
+  const totalNodes = 8; // Number of nodes excluding attacker and victim
+  return Array.from({ length: totalNodes }, (_, i) => ({
+    id: i + 1,
+    x: Math.random() * canvas2.width * 0.8 + canvas2.width * 0.1, // Ensure nodes stay within bounds
+    y: Math.random() * canvas2.height * 0.8 + canvas2.height * 0.1,
+    name: `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
+    isAttacker: false,
+    isVictim: false,
+  }));
+}
+
+// Place attacker and victim nodes at opposite ends
+const attackerNode = {
+  id: 999,
+  x: 30, // Far left
+  y: canvas2.height / 2,
+  name: 'Attacker',
+  isAttacker: true,
   isVictim: false,
-}));
+};
 
-// Randomly assign attacker and victim
-const attackerNode = nodes[Math.floor(Math.random() * nodes.length)];
-const victimNode = nodes[Math.floor(Math.random() * nodes.length)];
-attackerNode.isAttacker = true;
-victimNode.isVictim = true;
-attackerNode.name = 'Attacker';
-victimNode.name = 'Victim';
+const victimNode = {
+  id: 1000,
+  x: canvas2.width - 30, // Far right
+  y: canvas2.height / 2,
+  name: 'Victim',
+  isAttacker: false,
+  isVictim: true,
+};
 
-// Dynamic route between attacker and victim
+let nodes = [attackerNode, victimNode]; // Initial nodes array
 let activeRoute = [];
 let traceIndex = 0;
+
+// Generate new nodes and routes
+function resetNodesAndRoute() {
+  const newNodes = generateNodes();
+  nodes = [attackerNode, victimNode, ...newNodes];
+  generateRoute();
+}
 
 // Draw nodes
 function drawNodes2() {
@@ -466,7 +487,11 @@ function generateRoute() {
   const proxies = [];
   while (proxies.length < 3) {
     const nextNode = nodes[Math.floor(Math.random() * nodes.length)];
-    if (nextNode !== currentNode && nextNode !== victimNode && !proxies.includes(nextNode)) {
+    if (
+      nextNode !== currentNode &&
+      nextNode !== victimNode &&
+      !proxies.includes(nextNode)
+    ) {
       proxies.push(nextNode);
     }
   }
@@ -483,7 +508,7 @@ function traceRoute() {
   if (traceIndex < activeRoute.length) {
     traceIndex++;
   } else {
-    generateRoute(); // Reset route after full trace
+    resetNodesAndRoute(); // Reset nodes and route after full trace
   }
 }
 
@@ -498,6 +523,6 @@ function animateCanvas2() {
 }
 
 // Initialize and run the simulation
-generateRoute();
+resetNodesAndRoute();
 animateCanvas2();
 setInterval(traceRoute, 2000); // Trace the route segment-by-segment every 2 seconds
