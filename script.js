@@ -192,19 +192,13 @@ function showWhiteRabbit() {
         systemInfo.appendChild(cpuElement);
       }
     }, 2000);
-
-    setInterval(() => {
-      const randomLog = logs[Math.floor(Math.random() * logs.length)];
-      networkInfo.innerHTML += `<li>${randomLog}</li>`;
-    }, 3000);
   }
   
   // Run the function
   populatePanels();
   
-  const logs = [
-    'www-data@webserver:/var/www/html$ nmap -sS -Pn -T4 -p- 10.0.0.5',
-    `
+  const logs = ['www-data@webserver:/var/www/html$ nmap -sS -Pn -T4 -p- 10.0.0.5',
+`
   Starting Nmap 7.93 ( https://nmap.org ) at 2024-11-12 18:23 UTC
   Nmap scan report for 10.0.0.5
   Host is up (0.0015s latency).

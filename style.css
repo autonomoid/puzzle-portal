@@ -326,7 +326,7 @@ button:active {
 }
 
 #network-info {
-  max-height: 100%; /* Ensures it doesn't grow beyond its parent container */
+  max-height: 95%; /* Ensures it doesn't grow beyond its parent container */
   height: calc(100vh - 170px); /* Adjust dynamically to fit the viewport, minus any margins or paddings */
   overflow-y: auto; /* Enable vertical scrolling */
   font-family: 'Courier New', monospace; /* Hacker-style font */
