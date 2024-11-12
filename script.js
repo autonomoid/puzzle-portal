@@ -86,29 +86,44 @@ try {
 // Matrix Effect
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
 
-const fontSize = 16;
-const columns = canvas.width / fontSize;
-const drops = Array(Math.floor(columns)).fill(1);
+// Resize canvas to fit the window
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+const fontSize = 16; // Size of each character
+const columns = Math.floor(canvas.width / fontSize); // Number of columns
+const drops = Array(columns).fill(0); // Array to track Y position for each column
 
 function drawMatrix() {
+  // Clear the canvas with a transparent black overlay
   ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = '#0f0';
+  // Set text properties
+  ctx.fillStyle = '#0f0'; // Green text
   ctx.font = `${fontSize}px monospace`;
 
   for (let i = 0; i < drops.length; i++) {
-    const text = String.fromCharCode(0x30a0 + Math.random() * 96);
+    // Generate a random character from Katakana Unicode range
+    const text = String.fromCharCode(0x30A0 + Math.random() * 96);
+
+    // Draw the character at the current position
     ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
-    if (drops[i] * fontSize > canvas.height && Math.random() > 0.95) {
+    // Move the character down the screen
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+      // Reset the drop to the top randomly
       drops[i] = 0;
     }
     drops[i]++;
   }
 }
 
+// Animate the matrix effect
 setInterval(drawMatrix, 50);

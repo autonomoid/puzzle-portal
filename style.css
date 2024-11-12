@@ -1,6 +1,6 @@
 body, html {
     height: 100%;
-    background-color: #000;
+    background-color: rgba(0, 0, 0, 0.0);;
     color: #0f0;
     overflow: hidden;
   }
@@ -41,5 +41,6 @@ body, html {
     height: 100%;
     z-index: -1;
     opacity: 0.8;
+    background-color: rgba(0, 0, 0, 1.0);
   }
   
