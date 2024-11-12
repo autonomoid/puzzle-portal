@@ -276,6 +276,7 @@ button:active {
   right: 0;
   margin-right: 120px !important;
   width: 480px;
+  height: 90%;
 }
 
 .vertical-panel h3 {
@@ -322,4 +323,32 @@ button:active {
 
 .cleanup {
   color: #808080; /* Gray for cleanup logs */
+}
+
+#network-info {
+  max-height: 100%; /* Ensures it doesn't grow beyond its parent container */
+  height: calc(100vh - 170px); /* Adjust dynamically to fit the viewport, minus any margins or paddings */
+  overflow-y: auto; /* Enable vertical scrolling */
+  font-family: 'Courier New', monospace; /* Hacker-style font */
+  color: #0f0; /* Neon green text */
+  background-color: rgba(0, 0, 0, 0.8); /* Dark translucent background */
+  padding: 10px;
+  border: 2px solid #0f0; /* Neon green border */
+  white-space: pre-wrap; /* Ensure text wraps within the panel */
+  word-wrap: break-word; /* Break long words to prevent horizontal scroll */
+  box-shadow: 0 0 10px #0f0; /* Neon glow effect */
+}
+
+#network-info li {
+  list-style: none; /* No bullet points for list items */
+  margin: 5px 0; /* Space between log entries */
+}
+
+.prefix {
+  color: #00ff00; /* Bright green for user@hostname */
+  font-weight: bold;
+}
+
+.command {
+  color: #ffffff; /* White for the typed commands */
 }
