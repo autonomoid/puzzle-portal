@@ -453,33 +453,31 @@ function showWhiteRabbit() {
     }
     activeRoute.push(victimNode);
   
-    traceIndex = -1; // Reset tracing progress
-    buildIndex = 0;  // Reset green route build-up
+    traceIndex = activeRoute.length; // Reset tracing progress (fully untraced)
+    buildIndex = 0; // Reset green route build-up
     rotating = false; // Stop any rotation
     cameraRotationX = 0; // Reset camera to default
     cameraRotationY = 0;
+  
+    calculateRotationToNode(attackerNode); // Start with attacker node
   }
   
   // Project 3D points onto 2D canvas with camera rotation
   function project3DTo2D(node) {
-    // Apply camera rotation to node positions
     const cosX = Math.cos(cameraRotationX);
     const sinX = Math.sin(cameraRotationX);
     const cosY = Math.cos(cameraRotationY);
     const sinY = Math.sin(cameraRotationY);
   
-    // Rotate around X-axis (vertical tilt)
     let y = node.y * cosX - node.z * sinX;
     let z = node.y * sinX + node.z * cosX;
   
-    // Rotate around Y-axis (horizontal pan)
     let x = node.x * cosY - z * sinY;
     z = node.x * sinY + z * cosY;
   
-    // Perspective projection
     const perspective = fov / (fov + z);
     const x2D = canvas2.width / 2 + x * perspective;
-    const y2D = canvas2.height / 2 - y * perspective; // Invert Y for canvas coordinates
+    const y2D = canvas2.height / 2 - y * perspective;
   
     return { x: x2D, y: y2D, scale: perspective };
   }
@@ -488,15 +486,13 @@ function showWhiteRabbit() {
   function drawNodes() {
     nodes.forEach((node) => {
       const { x, y, scale } = project3DTo2D(node);
-      const size = Math.max(2, 8 * scale); // Scale node size with perspective
+      const size = Math.max(2, 8 * scale);
   
-      // Draw node
       ctx2.fillStyle = node === activeRoute[0] ? 'red' : node === activeRoute[activeRoute.length - 1] ? 'blue' : 'gray';
       ctx2.beginPath();
       ctx2.arc(x, y, size, 0, 2 * Math.PI);
       ctx2.fill();
   
-      // Draw label
       ctx2.fillStyle = 'cyan';
       ctx2.font = `${Math.max(8, 12 * scale)}px Courier New`;
       ctx2.textAlign = 'center';
@@ -514,14 +510,14 @@ function showWhiteRabbit() {
       const from2D = project3DTo2D(fromNode);
       const to2D = project3DTo2D(toNode);
   
-      // Green for built route, red for traced route
-      if (i <= traceIndex) {
-        ctx2.strokeStyle = 'red';
+      if (i >= traceIndex - 1) {
+        ctx2.strokeStyle = 'red'; // Red for traced segments
       } else if (i < buildIndex) {
-        ctx2.strokeStyle = '#0f0';
+        ctx2.strokeStyle = '#0f0'; // Green for built route
       } else {
-        ctx2.strokeStyle = 'gray';
+        ctx2.strokeStyle = 'gray'; // Gray for unconnected segments
       }
+  
       ctx2.beginPath();
       ctx2.moveTo(from2D.x, from2D.y);
       ctx2.lineTo(to2D.x, to2D.y);
@@ -535,7 +531,7 @@ function showWhiteRabbit() {
     const deltaY = targetCameraRotationY - cameraRotationY;
   
     if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) {
-      rotating = false; // Stop rotating when close to target
+      rotating = false;
       return;
     }
   
@@ -572,9 +568,9 @@ function showWhiteRabbit() {
   function incrementTraceRoute() {
     if (rotating) return; // Wait for rotation to stop
   
-    if (traceIndex < activeRoute.length - 2) {
-      traceIndex++;
-      calculateRotationToNode(activeRoute[traceIndex + 1]); // Rotate to the next traced node
+    if (traceIndex > 0) { // Trace backward from victim to attacker
+      traceIndex--;
+      calculateRotationToNode(activeRoute[traceIndex]); // Rotate to the next traced node
     } else {
       // After tracing is complete, reset the route after a short delay
       setTimeout(() => {
