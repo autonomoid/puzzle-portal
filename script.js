@@ -546,36 +546,78 @@ function showWhiteRabbit() {
   }
   
 
-// Draw nodes with dynamic colors based on the route state
-function drawNodes() {
-    nodes.forEach((node, index) => {
+  function drawNodes() {
+    const lightSource = { x: 0, y: 0, z: 200 }; // Light source position in 3D space
+  
+    nodes.forEach((node) => {
       const { x, y, scale } = project3DTo2D(node);
       const size = Math.max(2, 8 * scale); // Scale node size with perspective
   
-      // Determine the color based on the node's state
-      let color = 'gray'; // Default for unvisited nodes
+      // Determine the node's base color based on its state
+      let baseColor = 'gray'; // Default for unvisited nodes
       if (node === activeRoute[0]) {
-        color = 'red'; // Attacker node
+        baseColor = 'red'; // Attacker node
       } else if (node === activeRoute[activeRoute.length - 1]) {
-        color = 'blue'; // Victim node
+        baseColor = 'blue'; // Victim node
       } else {
-        // Intermediate nodes
         const nodeIndexInRoute = activeRoute.indexOf(node);
         if (nodeIndexInRoute !== -1) {
           if (nodeIndexInRoute <= buildIndex) {
-            color = '#0f0'; // Green for nodes in the built route
+            baseColor = '#0f0'; // Green for nodes in the built route
           }
           if (nodeIndexInRoute >= traceIndex) {
-            color = 'red'; // Red for traced nodes
+            baseColor = 'red'; // Red for traced nodes
           }
         }
       }
   
-      // Draw node
-      ctx2.fillStyle = color;
+      // Calculate the direction of the light relative to the node
+      const lightVector = {
+        x: lightSource.x - node.x,
+        y: lightSource.y - node.y,
+        z: lightSource.z - node.z,
+      };
+      const lightMagnitude = Math.sqrt(
+        lightVector.x ** 2 + lightVector.y ** 2 + lightVector.z ** 2
+      );
+      const normalizedLight = {
+        x: lightVector.x / lightMagnitude,
+        y: lightVector.y / lightMagnitude,
+        z: lightVector.z / lightMagnitude,
+      };
+  
+      // Calculate the dot product between the light direction and the node's normal
+      const normalVector = { x: node.x, y: node.y, z: node.z }; // Node's surface normal
+      const normalMagnitude = Math.sqrt(
+        normalVector.x ** 2 + normalVector.y ** 2 + normalVector.z ** 2
+      );
+      const normalizedNormal = {
+        x: normalVector.x / normalMagnitude,
+        y: normalVector.y / normalMagnitude,
+        z: normalVector.z / normalMagnitude,
+      };
+      const dotProduct =
+        normalizedLight.x * normalizedNormal.x +
+        normalizedLight.y * normalizedNormal.y +
+        normalizedLight.z * normalizedNormal.z;
+  
+      // Clamp the dot product between 0 and 1 to get the light intensity
+      const lightIntensity = Math.max(0, Math.min(1, dotProduct));
+  
+      // Adjust the base color to incorporate the light intensity
+    // Create a radial gradient for the sphere
+    const gradient = ctx2.createRadialGradient(x, y, 0, x, y, size);
+    gradient.addColorStop(0, `rgba(255, 255, 255, ${0.7 * lightIntensity})`); // Highlight
+    gradient.addColorStop(0.7, baseColor); // Base color dynamically set
+    gradient.addColorStop(1, `rgba(0, 0, 0, 0)`); // Transparent shadow
+
+  
+      // Draw the sphere
+      ctx2.fillStyle = gradient;
       ctx2.beginPath();
       ctx2.arc(x, y, size, 0, 2 * Math.PI);
       ctx2.fill();
+      ctx2.closePath(); // Ensure no stroke is applied
   
       // Draw label
       ctx2.fillStyle = 'cyan';
@@ -585,6 +627,7 @@ function drawNodes() {
     });
   }
   
+
   
   // Draw the route
   function drawRoute() {
