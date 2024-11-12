@@ -416,14 +416,20 @@ function showWhiteRabbit() {
   let targetCameraRotationY = 0; // Target rotation for Y-axis
   let rotationStep = 0.01; // Fine rotation step
   
-  // Generate nodes on the sphere
+  let buildRouteTimeout = null;
+  let traceRouteTimeout = null;
+  
+  // Generate nodes on the sphere using Fibonacci lattice
   function generateNodes() {
     nodes = Array.from({ length: numNodes }, (_, i) => {
-      const theta = Math.random() * Math.PI * 2; // Longitude
-      const phi = Math.acos(2 * Math.random() - 1); // Latitude
-      const x = sphereRadius * Math.sin(phi) * Math.cos(theta);
-      const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
-      const z = sphereRadius * Math.cos(phi);
+      const goldenRatio = (1 + Math.sqrt(5)) / 2;
+      const longitude = 2 * Math.PI * (i / goldenRatio); // Evenly distributed angles
+      const latitude = Math.asin(-1 + (2 * i) / (numNodes - 1)); // Uniform latitude
+      
+      const x = sphereRadius * Math.cos(longitude) * Math.cos(latitude);
+      const y = sphereRadius * Math.sin(longitude) * Math.cos(latitude);
+      const z = sphereRadius * Math.sin(latitude);
+  
       return {
         id: i + 1,
         x,
@@ -438,11 +444,16 @@ function showWhiteRabbit() {
     const victimNode = nodes[nodes.length - 1];
     attackerNode.name = 'Attacker';
     victimNode.name = 'Victim';
+  
     return { attackerNode, victimNode };
   }
   
   // Generate a new route
   function generateRoute() {
+    // Clear any pending timeouts
+    if (buildRouteTimeout) clearTimeout(buildRouteTimeout);
+    if (traceRouteTimeout) clearTimeout(traceRouteTimeout);
+  
     const { attackerNode, victimNode } = generateNodes();
     activeRoute = [attackerNode];
   
@@ -453,13 +464,62 @@ function showWhiteRabbit() {
     }
     activeRoute.push(victimNode);
   
-    traceIndex = activeRoute.length; // Reset tracing progress (fully untraced)
+    traceIndex = activeRoute.length; // Reset tracing progress
     buildIndex = 0; // Reset green route build-up
     rotating = false; // Stop any rotation
     cameraRotationX = 0; // Reset camera to default
     cameraRotationY = 0;
   
     calculateRotationToNode(attackerNode); // Start with attacker node
+    buildGreenRoute(); // Start building the green route
+  }
+  
+  function buildGreenRoute() {
+    if (buildIndex < activeRoute.length - 1) {
+      // Add the next segment to the green route
+      buildIndex++;
+      calculateRotationToNode(activeRoute[buildIndex]); // Rotate to the next node
+      buildRouteTimeout = setTimeout(buildGreenRoute, 2000); // Trigger the next segment after rotation
+    } else {
+      // Once green route is fully built, start tracing after a short delay
+      traceRouteTimeout = setTimeout(traceRedRoute, 2000);
+    }
+  }
+  
+  function traceRedRoute() {
+    if (traceIndex > 0) {
+      // Trace the next segment of the red route
+      traceIndex--;
+      calculateRotationToNode(activeRoute[traceIndex]); // Rotate to the next node
+      traceRouteTimeout = setTimeout(traceRedRoute, 2000); // Trigger the next segment after rotation
+    } else {
+      // Once red route is fully traced, generate a new route after a delay
+      setTimeout(generateRoute, 2000);
+    }
+  }
+  
+  // Smooth rotation to center the target node
+  function rotateCameraToTarget() {
+    const deltaX = targetCameraRotationX - cameraRotationX;
+    const deltaY = targetCameraRotationY - cameraRotationY;
+  
+    if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) {
+      rotating = false; // Stop rotating
+      return;
+    }
+  
+    cameraRotationX += Math.sign(deltaX) * Math.min(Math.abs(deltaX), rotationStep);
+    cameraRotationY += Math.sign(deltaY) * Math.min(Math.abs(deltaY), rotationStep);
+  }
+  
+  // Calculate target rotation for a node
+  function calculateRotationToNode(node) {
+    const theta = Math.atan2(node.y, node.x);
+    const phi = Math.acos(node.z / sphereRadius);
+  
+    targetCameraRotationX = phi - Math.PI / 2;
+    targetCameraRotationY = theta;
+    rotating = true;
   }
   
   // Project 3D points onto 2D canvas with camera rotation
@@ -525,60 +585,6 @@ function showWhiteRabbit() {
     }
   }
   
-  // Smooth rotation to center the target node
-  function rotateCameraToTarget() {
-    const deltaX = targetCameraRotationX - cameraRotationX;
-    const deltaY = targetCameraRotationY - cameraRotationY;
-  
-    if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) {
-      rotating = false;
-      return;
-    }
-  
-    cameraRotationX += Math.sign(deltaX) * Math.min(Math.abs(deltaX), rotationStep);
-    cameraRotationY += Math.sign(deltaY) * Math.min(Math.abs(deltaY), rotationStep);
-  }
-  
-  // Calculate target rotation for a node
-  function calculateRotationToNode(node) {
-    const theta = Math.atan2(node.y, node.x);
-    const phi = Math.acos(node.z / sphereRadius);
-  
-    targetCameraRotationX = phi - Math.PI / 2;
-    targetCameraRotationY = theta;
-    rotating = true;
-  }
-  
-  // Increment green route build-up
-  function incrementBuildRoute() {
-    if (rotating) return; // Wait for rotation to stop
-  
-    if (buildIndex < activeRoute.length - 1) {
-      buildIndex++;
-      calculateRotationToNode(activeRoute[buildIndex]); // Rotate to the next node in the route
-    } else {
-      // Once the route is fully built, start tracing after a short delay
-      setTimeout(() => {
-        setInterval(incrementTraceRoute, 2000); // Start tracing every 2 seconds
-      }, 2000);
-    }
-  }
-  
-  // Increment red trace route
-  function incrementTraceRoute() {
-    if (rotating) return; // Wait for rotation to stop
-  
-    if (traceIndex > 0) { // Trace backward from victim to attacker
-      traceIndex--;
-      calculateRotationToNode(activeRoute[traceIndex]); // Rotate to the next traced node
-    } else {
-      // After tracing is complete, reset the route after a short delay
-      setTimeout(() => {
-        generateRoute();
-      }, 2000);
-    }
-  }
-  
   // Animation loop
   function animateSphere() {
     ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
@@ -594,5 +600,4 @@ function showWhiteRabbit() {
   // Initialize and run the simulation
   generateRoute();
   animateSphere();
-  setInterval(incrementBuildRoute, 2000); // Increment route build every 2 seconds
   
