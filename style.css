@@ -361,3 +361,16 @@ button:active {
   margin-top: 10px; /* Space from the system info */
   box-shadow: 0 0 10px #0f0; /* Add a neon glow effect */
 }
+
+.progress-container {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  width: calc(100% - 20px); /* Ensure it spans the width of the canvas */
+  z-index: 1;
+}
+
+.progress-bar {
+  transition: width 0.5s ease; /* Smooth animation for the progress bar */
+}
+

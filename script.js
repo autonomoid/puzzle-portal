@@ -1,3 +1,12 @@
+const progressBar = document.getElementById('progress-bar');
+
+function updateProgressBar(progress, isTracing) {
+  progressBar.style.width = `${progress}%`;
+  progressBar.setAttribute('aria-valuenow', progress);
+  progressBar.classList.toggle('bg-success', !isTracing); // Green for building
+  progressBar.classList.toggle('bg-danger', isTracing);  // Red for tracing
+}
+
 // Audio Control
 let audioPlaying = false;
 const audio = new Audio('mixkit-games-music-706.mp3');
@@ -538,6 +547,11 @@ function showWhiteRabbit() {
       calculateRotationToNode(activeRoute[buildIndex]); // Rotate to the next node
       triggerPulse(); // Trigger pulse effect
       triggerPacketAnimation(buildIndex, false); // Animate green packet
+      
+      // Update the progress bar for green route building
+      const progress = ((buildIndex + 1) / activeRoute.length) * 100;
+      updateProgressBar(progress, false);
+      
       buildRouteTimeout = setTimeout(buildGreenRoute, 2000); // Trigger next segment
     } else {
       // Start tracing the red route
@@ -553,6 +567,11 @@ function showWhiteRabbit() {
       calculateRotationToNode(activeRoute[traceIndex]); // Rotate to the next node
       triggerPulse(); // Trigger pulse effect
       triggerPacketAnimation(traceIndex, true); // Animate red packet
+      
+      // Update the progress bar for red route tracing
+      const progress = ((activeRoute.length - traceIndex) / activeRoute.length) * 100;
+      updateProgressBar(progress, true);
+      
       traceRouteTimeout = setTimeout(traceRedRoute, 2000); // Trigger next segment
     } else {
       // Generate a new route after tracing is complete
@@ -783,3 +802,5 @@ function showWhiteRabbit() {
   generateRoute();
   animateSphere();
   
+
+
