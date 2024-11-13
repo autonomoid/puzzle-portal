@@ -554,9 +554,7 @@ function showWhiteRabbit() {
       setTimeout(generateRoute, 2000);
     }
   }
-  
-  
-  
+    
   
   // Smooth rotation to center the target node
   function rotateCameraToTarget() {
@@ -694,31 +692,22 @@ function showWhiteRabbit() {
       const fromNode = activeRoute[i];
       const toNode = activeRoute[i + 1];
   
-      if (!fromNode || !toNode) {
-        console.error('Invalid nodes in drawRoute:', { fromNode, toNode });
-        continue; // Skip invalid edges
-      }
+      if (!fromNode || !toNode) continue;
   
       const from2D = project3DTo2D(fromNode);
       const to2D = project3DTo2D(toNode);
   
-      // Determine the edge color and direction based on the route state
+      // Determine the edge color
       if (i <= buildIndex) {
-        // Green route building
-        ctx2.strokeStyle = isPulsing && i === buildIndex - 1
-          ? `rgba(0, 255, 0, ${0.5 + 0.5 * Math.sin(pulseProgress)})` // Pulsing effect
-          : '#0f0'; // Default green
-      } else if (i >= traceIndex) {
-        // Red route tracing
-        ctx2.strokeStyle = isPulsing && i === traceIndex
-          ? `rgba(255, 0, 0, ${0.5 + 0.5 * Math.sin(pulseProgress)})` // Pulsing effect
-          : 'red'; // Default red
+        // Green route is fully built
+        ctx2.strokeStyle = i >= traceIndex
+          ? 'red' // Overwrite with red during tracing
+          : '#0f0'; // Keep green otherwise
       } else {
-        // Default color for unvisited edges
+        // Unvisited edges remain gray
         ctx2.strokeStyle = 'gray';
       }
   
-      // Draw the edge
       ctx2.beginPath();
       ctx2.moveTo(from2D.x, from2D.y);
       ctx2.lineTo(to2D.x, to2D.y);
@@ -727,14 +716,14 @@ function showWhiteRabbit() {
   }
   
   
-  
-  
   function triggerPulse(isTracing = false) {
+    if (isPulsing) return; // Prevent multiple overlapping pulses
+  
     isPulsing = true;
     pulseProgress = 0;
   
     const pulseInterval = setInterval(() => {
-      pulseProgress += 0.2; // Increment the pulse phase
+      pulseProgress += 0.2; // Adjust speed of pulsing
   
       if (pulseProgress > Math.PI * 4) { // End after two pulses
         isPulsing = false;
