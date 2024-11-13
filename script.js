@@ -41,8 +41,8 @@ async function submitAnswer() {
   const challengeHeader = document.getElementById("challenge-header");
 
   try {
-    // Fetch the hash-to-image mapping from the JSON file
-    const response = await fetch('assets/imageHashes.json');
+    // Fetch the hash-to-challenge mapping from the JSON file
+    const response = await fetch('assets/challengeHashes.json');
     const data = await response.json();
 
     // Hash the user's input
@@ -68,7 +68,7 @@ async function submitAnswer() {
       completedHashes.add(hexHash);
 
       // Decrypt the next image
-      decryptImage(answer, `images/${nextImage}.enc`);
+      decryptImage(answer, `challenge_files/${nextImage}.enc`);
 
       // Increment the challenge number in the header
       const currentChallenge = parseInt(challengeHeader.textContent.match(/\d+/), 10);
