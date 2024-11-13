@@ -705,7 +705,7 @@ function showWhiteRabbit() {
   
       // Determine the edge color with pulse effect
       if (i <= buildIndex) {
-        if (!isTracing && i === buildIndex - 1 && isPulsing) {
+        if (!isTracing && i === buildIndex && isPulsing) {
           // Pulse green edge during green route build
           ctx2.strokeStyle = `rgba(0, 255, 0, ${0.5 + 0.5 * Math.sin(pulseProgress)})`;
         } else if (isTracing && i === traceIndex && isPulsing) {
