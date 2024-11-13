@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECC Brute Force Simulation (Finite Field)</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="ellipticCurveCanvas" width="800" height="600"></canvas>
+    <script>
+        // Elliptic curve parameters: y^2 = x^3 + ax + b (mod p)
+        const a = -1; // Curve parameter
+        const b = 1;  // Curve parameter
+        const p = 101; // Prime modulus for the finite field
+        const canvas = document.getElementById('ellipticCurveCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const scale = 6; // Scaling factor for visualization
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        // Generator point
+        const generator = { x: 2, y: 22 }; // Example point on the curve
+        let currentPoint = { ...generator };
+        const targetN = 1000; // Target iteration for brute force
+        let bruteForceCount = 1; // Iteration counter
+
+        // Modular arithmetic helper
+        function mod(n, m) {
+            return ((n % m) + m) % m;
+        }
+
+        // Extended Euclidean algorithm for modular inverse
+        function modInverse(k, p) {
+            let [m0, x0, x1] = [p, 0, 1];
+            if (p === 1) return 0;
+
+            while (k > 1) {
+                const q = Math.floor(k / p);
+                [k, p] = [p, k % p];
+                [x0, x1] = [x1 - q * x0, x0];
+            }
+
+            return mod(x1, m0);
+        }
+
+        // Elliptic curve point addition in finite field
+        function addPoints(p, q) {
+            if (p.x === q.x && p.y === mod(-q.y, p)) {
+                return null; // Point at infinity
+            }
+
+            let slope;
+            if (p.x === q.x && p.y === q.y) {
+                // Doubling
+                const numerator = mod(3 * p.x ** 2 + a, p);
+                const denominator = modInverse(2 * p.y, p);
+                slope = mod(numerator * denominator, p);
+            } else {
+                // Addition
+                const numerator = mod(q.y - p.y, p);
+                const denominator = modInverse(q.x - p.x, p);
+                slope = mod(numerator * denominator, p);
+            }
+
+            const xr = mod(slope ** 2 - p.x - q.x, p);
+            const yr = mod(slope * (p.x - xr) - p.y, p);
+            return { x: xr, y: yr };
+        }
+
+        // Drawing helpers
+        function drawPoint(point, color = 'black') {
+            ctx.beginPath();
+            ctx.arc(centerX + point.x * scale, centerY - point.y * scale, 3, 0, 2 * Math.PI);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        function drawLine(p1, p2, color = 'blue') {
+            ctx.beginPath();
+            ctx.moveTo(centerX + p1.x * scale, centerY - p1.y * scale);
+            ctx.lineTo(centerX + p2.x * scale, centerY - p2.y * scale);
+            ctx.strokeStyle = color;
+            ctx.stroke();
+        }
+
+        function drawCurve() {
+            for (let x = 0; x < p; x++) {
+                const ySquared = mod(x ** 3 + a * x + b, p);
+                for (let y = 0; y < p; y++) {
+                    if (mod(y ** 2, p) === ySquared) {
+                        drawPoint({ x, y }, 'gray'); // All valid points
+                    }
+                }
+            }
+        }
+
+        // Animation function
+        function bruteForceECC() {
+            if (bruteForceCount > targetN) {
+                console.log(`Reached target: ${targetN}G at point (${currentPoint.x}, ${currentPoint.y})`);
+                return; // Stop when target is reached
+            }
+
+            const nextPoint = addPoints(currentPoint, generator);
+            if (!nextPoint) {
+                console.log('Reached point at infinity. Stopping simulation.');
+                return; // Stop if we reach the point at infinity
+            }
+
+            drawLine(currentPoint, nextPoint, 'blue');
+            drawPoint(nextPoint, 'green');
+
+            currentPoint = nextPoint; // Update the current point
+            bruteForceCount++;
+
+            setTimeout(bruteForceECC, 50); // Adjust delay for speed
+        }
+
+        // Initialize canvas and start animation
+        ctx.clearRect(0, 0, width, height);
+        drawCurve(); // Plot all valid points
+        drawPoint(generator, 'red'); // Draw generator point
+        bruteForceECC(); // Start brute force simulation
+    </script>
+</body>
+</html>

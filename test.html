@@ -97,30 +97,86 @@ function startEllipticCurveCrackingAnimation() {
   const canvas = document.getElementById('curve-canvas');
   const ctx = canvas.getContext('2d');
 
-  // ECC parameters
+  // ECC Parameters
   const a = 0; // Coefficient for x
   const b = 7; // Constant
-  const scale = 10; // Scale factor for visual clarity
-  const width = canvas.width;
-  const height = canvas.height;
+  const basePoint = { x: 2, y: 3 }; // Base point G
+  const keySpace = 899999; // Maximum key range for \( k \)
+  const correctKey = Math.floor(Math.random() * 899999) + 100000; // Simulated private key (6 digits)
+  const publicKey = scalarMultiply(correctKey, basePoint); // Target public key \( Q \)
 
-  const basePoint = { x: 2, y: 5 }; // Base point G
-  const prime = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F"); // Secp256k1 prime modulus
-  const two256 = BigInt(2) ** BigInt(256); // 2^256
-  const correctKey = two256 - BigInt(Math.floor(Math.random() * 1000000)); // Simulated 256-bit private key
-  const publicKey = calculatePoint(correctKey); // Target public key Q
+  let currentKey = 1; // Start from \( k = 1 \)
+  let currentPoint = basePoint; // Start from \( G \)
 
-  let currentKey = two256; // Start brute force from 2^256
-  const pathPoints = []; // Track all attempted points
+  // Dynamic scaling factor based on curve range
+  const curveRange = calculateCurveRange();
+  const canvasScale = Math.min(canvas.width / curveRange.xRange, canvas.height / curveRange.yRange);
 
   // Display the public key
-  publicKeyElement.textContent = `(${publicKey.x.toString()}, ${publicKey.y.toString()})`;
+  publicKeyElement.textContent = `(${publicKey.x.toFixed(2)}, ${publicKey.y.toFixed(2)})`;
 
-  // Simulate modular arithmetic to calculate kG
-  function calculatePoint(k) {
+  // Calculate the range of the curve
+  function calculateCurveRange() {
+    let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+    for (let x = -100; x <= 100; x += 0.1) {
+      const ySquared = x ** 3 + a * x + b;
+      if (ySquared >= 0) {
+        const y1 = Math.sqrt(ySquared);
+        const y2 = -Math.sqrt(ySquared);
+        xMin = Math.min(xMin, x);
+        xMax = Math.max(xMax, x);
+        yMin = Math.min(yMin, y2);
+        yMax = Math.max(yMax, y1);
+      }
+    }
     return {
-      x: (BigInt(basePoint.x) * k) % prime,
-      y: (BigInt(basePoint.y) * k) % prime,
+      xRange: xMax - xMin,
+      yRange: yMax - yMin,
+      xMin,
+      xMax,
+      yMin,
+      yMax,
+    };
+  }
+
+  // Validate if a point is on the curve
+  function isPointOnCurve(x, y) {
+    return Math.abs(y ** 2 - (x ** 3 + a * x + b)) < 0.01; // Allow small floating-point errors
+  }
+
+  // Point addition
+  function pointAdd(p, q) {
+    if (p.x === q.x && p.y !== q.y) return null; // Point at infinity
+
+    const lambda = p.x === q.x
+      ? (3 * p.x ** 2 + a) / (2 * p.y)
+      : (q.y - p.y) / (q.x - p.x);
+
+    const x = lambda ** 2 - p.x - q.x;
+    const y = lambda * (p.x - x) - p.y;
+    return { x, y };
+  }
+
+  // Scalar multiplication (repeated addition)
+  function scalarMultiply(k, point) {
+    let result = null;
+    let addend = point;
+
+    while (k > 0) {
+      if (k % 2 === 1) result = result ? pointAdd(result, addend) : addend;
+      addend = pointAdd(addend, addend);
+      k = Math.floor(k / 2);
+    }
+
+    return result;
+  }
+
+  // Normalize point to canvas coordinates
+  function normalizePoint(point) {
+    const { xRange, yRange, xMin, yMin } = curveRange;
+    return {
+      x: ((point.x - xMin) / xRange) * canvas.width,
+      y: canvas.height - ((point.y - yMin) / yRange) * canvas.height,
     };
   }
 
@@ -128,34 +184,34 @@ function startEllipticCurveCrackingAnimation() {
   function drawGrid() {
     ctx.strokeStyle = '#003300'; // Dark green grid
     ctx.lineWidth = 0.5;
-    for (let x = 0; x < width; x += 20) {
+    for (let x = 0; x < canvas.width; x += 20) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
+      ctx.lineTo(x, canvas.height);
       ctx.stroke();
     }
-    for (let y = 0; y < height; y += 20) {
+    for (let y = 0; y < canvas.height; y += 20) {
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
+      ctx.lineTo(canvas.width, y);
       ctx.stroke();
     }
   }
 
   // Draw the elliptic curve
   function drawEllipticCurve() {
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
     ctx.strokeStyle = '#00ff00'; // Bright green curve
     ctx.lineWidth = 2; // Thicker line for better visibility
     ctx.beginPath();
-    for (let x = -width / (2 * scale); x <= width / (2 * scale); x += 0.1) {
+    for (let x = -100; x <= 100; x += 0.1) {
       const ySquared = x ** 3 + a * x + b;
       if (ySquared >= 0) {
         const y1 = Math.sqrt(ySquared);
         const y2 = -Math.sqrt(ySquared);
-        ctx.fillRect(scale * x + width / 2, -scale * y1 + height / 2, 2, 2);
-        ctx.fillRect(scale * x + width / 2, -scale * y2 + height / 2, 2, 2);
+        ctx.fillRect(normalizePoint({ x, y: y1 }).x, normalizePoint({ x, y: y1 }).y, 1, 1);
+        ctx.fillRect(normalizePoint({ x, y: y2 }).x, normalizePoint({ x, y: y2 }).y, 1, 1);
       }
     }
     ctx.stroke();
@@ -163,35 +219,27 @@ function startEllipticCurveCrackingAnimation() {
 
   // Draw points
   function drawPoint(point, color, label) {
-    if (!point) return; // Avoid invalid points
+    if (!point) return; // Skip null points
+    const normalized = normalizePoint(point);
     ctx.beginPath();
-    ctx.arc(
-      scale * Number(point.x) + width / 2,
-      -scale * Number(point.y) + height / 2,
-      5,
-      0,
-      2 * Math.PI
-    );
+    ctx.arc(normalized.x, normalized.y, 5, 0, 2 * Math.PI);
     ctx.fillStyle = color;
     ctx.fill();
     if (label) {
-      ctx.fillStyle = '#00ff00'; // Label color
+      ctx.fillStyle = '#00ff00';
       ctx.font = '12px Courier New';
-      ctx.fillText(label, scale * Number(point.x) + width / 2 + 8, -scale * Number(point.y) + height / 2 - 8);
+      ctx.fillText(label, normalized.x + 8, normalized.y - 8);
     }
   }
 
   // Draw connection lines between points
   function drawConnection(from, to) {
+    if (!from || !to) return; // Skip null points
+    const normalizedFrom = normalizePoint(from);
+    const normalizedTo = normalizePoint(to);
     ctx.beginPath();
-    ctx.moveTo(
-      scale * Number(from.x) + width / 2,
-      -scale * Number(from.y) + height / 2
-    );
-    ctx.lineTo(
-      scale * Number(to.x) + width / 2,
-      -scale * Number(to.y) + height / 2
-    );
+    ctx.moveTo(normalizedFrom.x, normalizedFrom.y);
+    ctx.lineTo(normalizedTo.x, normalizedTo.y);
     ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)'; // Semi-transparent yellow
     ctx.lineWidth = 1.5;
     ctx.stroke();
@@ -199,39 +247,28 @@ function startEllipticCurveCrackingAnimation() {
 
   // Animation loop
   const crackingInterval = setInterval(() => {
-    if (currentKey <= correctKey) {
+    if (currentKey === correctKey) {
       clearInterval(crackingInterval);
-      animationElement.textContent = `[+] Key Found: k = ${correctKey.toString(16)}`;
+      animationElement.textContent = `[+] Key Found: k = ${correctKey}`;
       drawPoint(publicKey, '#ff0000', 'Q'); // Highlight the public key
       return;
     }
 
-    currentKey--; // Decrement key
-    const kG = calculatePoint(currentKey);
+    const nextPoint = pointAdd(currentPoint, basePoint);
 
-    pathPoints.push(kG); // Store path
-    drawEllipticCurve(); // Redraw the curve
-    drawPoint(basePoint, '#0000ff', 'G'); // Draw base point
-    drawPoint(publicKey, '#ff0000', 'Q'); // Draw public key
-
-    // Draw all connections
-    for (let i = 0; i < pathPoints.length; i++) {
-      drawConnection(basePoint, pathPoints[i]); // Connect G to each kG
+    if (nextPoint) {
+      drawConnection(currentPoint, nextPoint); // Connect points
+      drawPoint(nextPoint, '#ffff00', `kG`); // Highlight current attempt
     }
 
-    // Highlight the current attempt
-    drawPoint(kG, '#ffff00', `kG`); // Highlight current kG
-
-    animationElement.textContent = `Trying k = ${currentKey.toString(16)}, kG = (${kG.x.toString(16)}, ${kG.y.toString(16)})`;
-  }, 10); // Milliseconds between iterations
+    currentPoint = nextPoint || basePoint; // Move to next point or reset
+    currentKey++;
+    animationElement.textContent = `Trying k = ${currentKey}, kG = (${nextPoint?.x?.toFixed(2) ?? '∞'}, ${nextPoint?.y?.toFixed(2) ?? '∞'})`;
+  }, 50);
 
   drawEllipticCurve(); // Initial draw
 }
-
-// Start the animation
-document.addEventListener('DOMContentLoaded', () => {
-  startEllipticCurveCrackingAnimation();
-});
+document.addEventListener('DOMContentLoaded', startEllipticCurveCrackingAnimation);
 </script>
 
 
