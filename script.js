@@ -17,7 +17,7 @@ function updateProgressBar(progress, isTracing) {
 
 // Audio Control
 let audioPlaying = false;
-const audio = new Audio('mixkit-games-music-706.mp3');
+const audio = new Audio('assets\\background.mp3');
 
 function toggleAudio() {
   const audioControlButton = document.querySelector('.audio-control button i');
@@ -156,12 +156,14 @@ async function decryptFile(password, filePath) {
     } else if (fileExtension === 'url') {
       // Handle YouTube URLs
       const urlContent = new TextDecoder("utf-8").decode(decryptedData).trim();
+      // Remove any non-printable characters
+      const sanitizedUrlContent = urlContent.replace(/[^\x20-\x7E]/g, '').trim();
       console.log("Decrypted URL Content:", urlContent);
-      if (urlContent.includes("youtube.com")) {
-        const videoId = urlContent.split("v=")[1]?.split("&")[0]; // Extract video ID
+      if (sanitizedUrlContent.includes("youtube.com")) {
+        const videoId = sanitizedUrlContent.split("v=")[1]?.split("&")[0]; // Extract video ID
         if (videoId) {
           const iframe = document.getElementById('challenge-iframe');
-          iframe.src = `https://www.youtube.com/embed/${videoId}`;
+          iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
           iframe.style.display = 'block';
         } else {
           throw new Error("Invalid YouTube URL format.");
@@ -172,8 +174,11 @@ async function decryptFile(password, filePath) {
     } else if (fileExtension === 'mp3' || fileExtension === 'wav') {
       // Handle audio files
       const base64Audio = btoa(String.fromCharCode(...decryptedData));
-      document.getElementById('challenge-audio').src = `data:audio/${fileExtension};base64,${base64Audio}`;
-      document.getElementById('challenge-audio').style.display = 'block';
+      const audioElement = document.getElementById('challenge-audio');
+      audioElement.src = `data:audio/${fileExtension};base64,${base64Audio}`;
+      audioElement.style.display = 'block';
+      audioElement.autoplay = true; // Enable autoplay
+      audioElement.load(); // Ensure the audio is loaded and autoplay starts
     } else if (fileExtension === 'mp4' || fileExtension === 'webm') {
       // Handle video files
       const base64Video = btoa(String.fromCharCode(...decryptedData));
