@@ -2,6 +2,7 @@ import base64
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import pad
 import json
 import os
 
@@ -16,9 +17,8 @@ def encrypt_file_for_js(file_path, password, output_file):
     with open(file_path, 'rb') as f:
         file_data = f.read()
 
-    # Pad the data to make its length a multiple of 16
-    pad_length = 16 - (len(file_data) % 16)
-    padded_data = file_data + bytes([pad_length] * pad_length)
+    # Pad data before encryption
+    padded_data = pad(file_data, AES.block_size)
 
     # Encrypt the data using AES-CBC
     cipher = AES.new(key, AES.MODE_CBC, iv)

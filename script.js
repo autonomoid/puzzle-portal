@@ -91,55 +91,70 @@ async function decryptFile(password, filePath) {
     // Fetch the encrypted file data
     const response = await fetch(filePath);
     const encryptedBase64 = await response.text(); // Assuming the encrypted data is Base64 encoded
-    const encryptedBlob = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+
+    // Decode Base64 to get the raw binary data
+    const encryptedBlob = CryptoJS.enc.Base64.parse(encryptedBase64);
 
     // Extract the IV and encrypted content
-    const iv = encryptedBlob.slice(0, 16); // First 16 bytes are the IV
-    const encryptedContent = encryptedBlob.slice(16); // Remaining bytes are the encrypted data
+    const ivHex = encryptedBlob.toString(CryptoJS.enc.Hex).slice(0, 32); // First 16 bytes (32 hex characters) are the IV
+    const encryptedContentHex = encryptedBlob.toString(CryptoJS.enc.Hex).slice(32); // Remaining bytes are the encrypted data
 
-    // Derive the cryptographic key from the password
-    const passwordKey = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password)); // SHA-256 hash of the password
-    const key = await crypto.subtle.importKey(
-      "raw",
-      passwordKey,
-      { name: "AES-CBC" },
-      false,
-      ["decrypt"]
-    );
+    console.log("IV (Hex):", ivHex);
+    console.log("Encrypted Content (Hex):", encryptedContentHex);
 
-    // Decrypt the data
-    const decryptedData = await crypto.subtle.decrypt(
-      { name: "AES-CBC", iv: iv },
+    // Derive the cryptographic key from the password (SHA-256)
+    const key = CryptoJS.enc.Hex.parse(CryptoJS.SHA256(password).toString());
+
+    // Decrypt using CryptoJS
+    const decrypted = CryptoJS.AES.decrypt(
+      { ciphertext: CryptoJS.enc.Hex.parse(encryptedContentHex) },
       key,
-      encryptedContent
+      {
+        iv: CryptoJS.enc.Hex.parse(ivHex),
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7, // Automatically removes padding
+      }
     );
 
-    // Remove PKCS#7 padding
-    const decryptedArray = new Uint8Array(decryptedData);
-    const paddingLength = decryptedArray[decryptedArray.length - 1];
-    const unpaddedData = decryptedArray.slice(0, decryptedArray.length - paddingLength);
+    // Convert decrypted WordArray to Uint8Array
+    const decryptedData = new Uint8Array(decrypted.words.length * 4);
+    decrypted.words.forEach((word, i) => {
+      decryptedData.set(
+        [
+          (word >> 24) & 0xff,
+          (word >> 16) & 0xff,
+          (word >> 8) & 0xff,
+          word & 0xff,
+        ],
+        i * 4
+      );
+    });
 
-    // Determine the original file extension by removing `.enc`
+    console.log("Decrypted Data (Uint8Array):", decryptedData);
+    console.log("Decrypted Data Length:", decryptedData.length);
+
+    // Determine file type by extension
     const fileExtension = filePath.split('.').slice(-2, -1)[0].toLowerCase();
 
     if (fileExtension === 'png' || fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'gif') {
-      // It's an image file
-      const base64Image = btoa(String.fromCharCode(...unpaddedData));
-      document.getElementById('challenge-image').src = 'data:image/' + fileExtension + ';base64,' + base64Image;
+      // Handle image files
+      const base64Image = btoa(String.fromCharCode(...decryptedData));
+      document.getElementById('challenge-image').src = `data:image/${fileExtension};base64,${base64Image}`;
       document.getElementById('challenge-text').textContent = ''; // Clear text content
     } else if (fileExtension === 'txt') {
-      // It's a text file
-      const textContent = new TextDecoder().decode(unpaddedData); // Decode entire content
+      // Handle text files
+      const textContent = new TextDecoder("utf-8").decode(decryptedData);
       document.getElementById('challenge-image').src = ''; // Clear image content
       document.getElementById('challenge-text').textContent = textContent; // Set text content
     } else {
-      throw new Error('Unsupported file type: ' + fileExtension);
+      throw new Error(`Unsupported file type: ${fileExtension}`);
     }
   } catch (err) {
     alert('Error decrypting the data. Make sure your answer is correct.');
     console.error(err);
   }
 }
+
 
   
 
