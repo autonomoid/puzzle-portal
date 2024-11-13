@@ -532,29 +532,34 @@ function showWhiteRabbit() {
   
 
   function buildGreenRoute() {
+    isTracing = false; // Indicate we're building the green route
     if (buildIndex < activeRoute.length - 1) {
       buildIndex++;
       calculateRotationToNode(activeRoute[buildIndex]); // Rotate to the next node
-      triggerPulse(); // Add pulse effect
-      triggerPacketAnimation(buildIndex - 1, false); // Animate green packet
-      buildRouteTimeout = setTimeout(buildGreenRoute, 2000); // Trigger the next segment
+      triggerPulse(); // Trigger pulse effect
+      triggerPacketAnimation(buildIndex, false); // Animate green packet
+      buildRouteTimeout = setTimeout(buildGreenRoute, 2000); // Trigger next segment
     } else {
+      // Start tracing the red route
       traceRouteTimeout = setTimeout(traceRedRoute, 2000);
     }
   }
   
+  
   function traceRedRoute() {
+    isTracing = true; // Indicate we're tracing the red route
     if (traceIndex > 0) {
       traceIndex--;
       calculateRotationToNode(activeRoute[traceIndex]); // Rotate to the next node
-      triggerPulse(true); // Add pulse effect
+      triggerPulse(); // Trigger pulse effect
       triggerPacketAnimation(traceIndex, true); // Animate red packet
-      traceRouteTimeout = setTimeout(traceRedRoute, 2000);
+      traceRouteTimeout = setTimeout(traceRedRoute, 2000); // Trigger next segment
     } else {
+      // Generate a new route after tracing is complete
       setTimeout(generateRoute, 2000);
     }
   }
-    
+  
   
   // Smooth rotation to center the target node
   function rotateCameraToTarget() {
@@ -684,7 +689,8 @@ function showWhiteRabbit() {
   
   let pulseProgress = 0; // Tracks pulse animation progress
   let isPulsing = false; // Is the animation active?
-  
+  let isTracing = false; // 
+
   function drawRoute() {
     ctx2.lineWidth = 2;
   
@@ -697,17 +703,24 @@ function showWhiteRabbit() {
       const from2D = project3DTo2D(fromNode);
       const to2D = project3DTo2D(toNode);
   
-      // Determine the edge color
+      // Determine the edge color with pulse effect
       if (i <= buildIndex) {
-        // Green route is fully built
-        ctx2.strokeStyle = i >= traceIndex
-          ? 'red' // Overwrite with red during tracing
-          : '#0f0'; // Keep green otherwise
+        if (!isTracing && i === buildIndex - 1 && isPulsing) {
+          // Pulse green edge during green route build
+          ctx2.strokeStyle = `rgba(0, 255, 0, ${0.5 + 0.5 * Math.sin(pulseProgress)})`;
+        } else if (isTracing && i === traceIndex && isPulsing) {
+          // Pulse red edge during red route trace
+          ctx2.strokeStyle = `rgba(255, 0, 0, ${0.5 + 0.5 * Math.sin(pulseProgress)})`;
+        } else {
+          // Default green or red
+          ctx2.strokeStyle = i >= traceIndex ? 'red' : '#0f0';
+        }
       } else {
         // Unvisited edges remain gray
         ctx2.strokeStyle = 'gray';
       }
   
+      // Draw the edge
       ctx2.beginPath();
       ctx2.moveTo(from2D.x, from2D.y);
       ctx2.lineTo(to2D.x, to2D.y);
@@ -716,21 +729,26 @@ function showWhiteRabbit() {
   }
   
   
-  function triggerPulse(isTracing = false) {
-    if (isPulsing) return; // Prevent multiple overlapping pulses
+  
+  
+  
+  function triggerPulse() {
+    if (isPulsing) return; // Prevent multiple pulses
   
     isPulsing = true;
     pulseProgress = 0;
   
     const pulseInterval = setInterval(() => {
-      pulseProgress += 0.2; // Adjust speed of pulsing
+      pulseProgress += 0.2; // Increment pulse progress
   
-      if (pulseProgress > Math.PI * 4) { // End after two pulses
-        isPulsing = false;
+      if (pulseProgress > Math.PI * 2) { // Stop after one pulse cycle
+        isPulsing = false; // Reset pulsing flag
         clearInterval(pulseInterval);
       }
     }, 50); // Adjust speed as needed
   }
+  
+
   
   
   // Animation loop
