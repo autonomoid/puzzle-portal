@@ -21,9 +21,14 @@
       box-shadow: 0 0 20px #00ff00;
     }
     .problem-statement {
-      font-size: 18px;
+      font-size: 14px;
       margin-bottom: 20px;
-      text-align: center;
+      text-align: left;
+      width: 90%;
+      line-height: 1.5;
+    }
+    .problem-statement b {
+      color: #ff6600;
     }
     .password-cracking-panel {
       width: 80%;
@@ -33,54 +38,89 @@
       margin-top: 20px;
       border: 1px solid #333;
       border-radius: 5px;
-      max-height: 200px;
-      overflow: auto;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      overflow: hidden;
       text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
     }
     #cracking-animation {
-      white-space: pre-wrap;
-      line-height: 1.5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   </style>
 </head>
 <body>
   <div class="problem-statement">
-    Solving: <b>Q = kG</b><br>
-    Curve: <b>y² = x³ + ax + b</b>, a = 0, b = 7 (secp256k1)<br>
-    Base Point G: <b>(2, 5)</b><br>
-    Target Point Q: <b>(25, 30)</b>
+    <b>Elliptic Curve Domain Parameters (secp256k1):</b><br><br>
+    <b>Finite Field:</b> \( F_p \), where <br>
+    <code>
+      p = FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE FFFFFC2F<br>
+        = 2<sup>256</sup> - 2<sup>32</sup> - 2<sup>9</sup> - 2<sup>8</sup> - 2<sup>7</sup> - 2<sup>6</sup> - 2<sup>4</sup> - 1
+    </code><br><br>
+    <b>Curve Equation:</b> \( E: y^2 = x^3 + ax + b \), where <br>
+    <code>
+      a = 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000<br>
+      b = 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000007
+    </code><br><br>
+    <b>Base Point \( G \):</b><br>
+    Compressed Form:<br>
+    <code>
+      G = 02 79BE667E F9DCBBAC 55A06295 CE870B07 029BFCDB 2DCE28D9 59F2815B 16F81798
+    </code><br>
+    Uncompressed Form:<br>
+    <code>
+      G = 04 79BE667E F9DCBBAC 55A06295 CE870B07 029BFCDB 2DCE28D9 59F2815B 16F81798<br>
+          483ADA77 26A3C465 5DA4FBFC 0E1108A8 FD17B448 A6855419 9C47D08F FB10D4B8
+    </code><br><br>
+    <b>Order \( n \) of \( G \):</b><br>
+    <code>
+      n = FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFE BAAEDCE6 AF48A03B BFD25E8C D0364141
+    </code><br><br>
+    <b>Cofactor \( h \):</b><br>
+    <code>h = 1</code><br><br>
+    <b>Target Public Key \( Q \):</b><br>
+    <code id="public-key"></code><br>
+    <b>Attempting to find the private key \( k \).</b>
   </div>
   <canvas id="curve-canvas" width="800" height="400"></canvas>
   <div class="password-cracking-panel">
-    <pre id="cracking-animation"></pre>
+    <div id="cracking-animation"></div>
   </div>
-  <script>
+
+<script>
 function startEllipticCurveCrackingAnimation() {
   const animationElement = document.getElementById('cracking-animation');
+  const publicKeyElement = document.getElementById('public-key');
   const canvas = document.getElementById('curve-canvas');
   const ctx = canvas.getContext('2d');
 
-  // Curve parameters for secp256k1
+  // ECC parameters
   const a = 0; // Coefficient for x
   const b = 7; // Constant
   const scale = 10; // Scale factor for visual clarity
   const width = canvas.width;
   const height = canvas.height;
 
-  // Fake ECC parameters for simulation
   const basePoint = { x: 2, y: 5 }; // Base point G
-  const targetPoint = { x: 25, y: 30 }; // Public key Q = kG
-  const maxIterations = 500; // Total brute-force attempts
-  const correctKey = 409; // Fake "k" that satisfies kG = Q
+  const prime = BigInt("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F"); // Secp256k1 prime modulus
+  const two256 = BigInt(2) ** BigInt(256); // 2^256
+  const correctKey = two256 - BigInt(Math.floor(Math.random() * 1000000)); // Simulated 256-bit private key
+  const publicKey = calculatePoint(correctKey); // Target public key Q
 
-  let currentIteration = 0;
-  const pathPoints = []; // Array to store all attempted points
+  let currentKey = two256; // Start brute force from 2^256
+  const pathPoints = []; // Track all attempted points
 
-  // Function to simulate unique point progression
-  function generatePoint(k) {
+  // Display the public key
+  publicKeyElement.textContent = `(${publicKey.x.toString()}, ${publicKey.y.toString()})`;
+
+  // Simulate modular arithmetic to calculate kG
+  function calculatePoint(k) {
     return {
-      x: basePoint.x * k % 100 + Math.sin(k) * 5, // Adding variation for uniqueness
-      y: basePoint.y * k % 100 + Math.cos(k) * 5,
+      x: (BigInt(basePoint.x) * k) % prime,
+      y: (BigInt(basePoint.y) * k) % prime,
     };
   }
 
@@ -106,6 +146,8 @@ function startEllipticCurveCrackingAnimation() {
   function drawEllipticCurve() {
     ctx.clearRect(0, 0, width, height);
     drawGrid();
+    ctx.strokeStyle = '#00ff00'; // Bright green curve
+    ctx.lineWidth = 2; // Thicker line for better visibility
     ctx.beginPath();
     for (let x = -width / (2 * scale); x <= width / (2 * scale); x += 0.1) {
       const ySquared = x ** 3 + a * x + b;
@@ -116,89 +158,82 @@ function startEllipticCurveCrackingAnimation() {
         ctx.fillRect(scale * x + width / 2, -scale * y2 + height / 2, 2, 2);
       }
     }
-    ctx.strokeStyle = '#00ff00'; // Bright green curve
-    ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
-  // Draw a point on the curve
+  // Draw points
   function drawPoint(point, color, label) {
+    if (!point) return; // Avoid invalid points
     ctx.beginPath();
     ctx.arc(
-      scale * point.x + width / 2,
-      -scale * point.y + height / 2,
+      scale * Number(point.x) + width / 2,
+      -scale * Number(point.y) + height / 2,
       5,
       0,
       2 * Math.PI
     );
     ctx.fillStyle = color;
     ctx.fill();
-    ctx.fillStyle = '#00ff00'; // Label color
-    ctx.font = '14px Courier New';
-    ctx.fillText(label, scale * point.x + width / 2 + 8, -scale * point.y + height / 2 - 8);
+    if (label) {
+      ctx.fillStyle = '#00ff00'; // Label color
+      ctx.font = '12px Courier New';
+      ctx.fillText(label, scale * Number(point.x) + width / 2 + 8, -scale * Number(point.y) + height / 2 - 8);
+    }
   }
 
-  // Draw the path of attempted points
-  function drawPath() {
-    if (pathPoints.length < 2) return;
-
+  // Draw connection lines between points
+  function drawConnection(from, to) {
     ctx.beginPath();
     ctx.moveTo(
-      scale * pathPoints[0].x + width / 2,
-      -scale * pathPoints[0].y + height / 2
+      scale * Number(from.x) + width / 2,
+      -scale * Number(from.y) + height / 2
     );
-
-    for (let i = 1; i < pathPoints.length; i++) {
-      ctx.lineTo(
-        scale * pathPoints[i].x + width / 2,
-        -scale * pathPoints[i].y + height / 2
-      );
-    }
-
-    ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)'; // Faint yellow path
+    ctx.lineTo(
+      scale * Number(to.x) + width / 2,
+      -scale * Number(to.y) + height / 2
+    );
+    ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)'; // Semi-transparent yellow
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
-  // Simulate brute-forcing
+  // Animation loop
   const crackingInterval = setInterval(() => {
-    if (currentIteration >= maxIterations) {
+    if (currentKey <= correctKey) {
       clearInterval(crackingInterval);
-      animationElement.textContent += `\n[+] Failed to find the key within ${maxIterations} iterations.`;
+      animationElement.textContent = `[+] Key Found: k = ${correctKey.toString(16)}`;
+      drawPoint(publicKey, '#ff0000', 'Q'); // Highlight the public key
       return;
     }
 
-    // Simulate finding the key
-    if (currentIteration === correctKey) {
-      clearInterval(crackingInterval);
-      drawPoint(targetPoint, '#ff0000', 'Q'); // Highlight the target point
-      animationElement.textContent += `\n[+] Key Found: k = ${correctKey}`;
-      return;
+    currentKey--; // Decrement key
+    const kG = calculatePoint(currentKey);
+
+    pathPoints.push(kG); // Store path
+    drawEllipticCurve(); // Redraw the curve
+    drawPoint(basePoint, '#0000ff', 'G'); // Draw base point
+    drawPoint(publicKey, '#ff0000', 'Q'); // Draw public key
+
+    // Draw all connections
+    for (let i = 0; i < pathPoints.length; i++) {
+      drawConnection(basePoint, pathPoints[i]); // Connect G to each kG
     }
 
-    // Generate a unique point for kG
-    const simulatedPoint = generatePoint(currentIteration);
+    // Highlight the current attempt
+    drawPoint(kG, '#ffff00', `kG`); // Highlight current kG
 
-    pathPoints.push(simulatedPoint); // Track the point
-    drawEllipticCurve();
-    drawPath(); // Draw the path of attempts
-    drawPoint(basePoint, '#0000ff', 'G'); // Base point G
-    drawPoint(targetPoint, '#ff0000', 'Q'); // Target point Q
-    drawPoint(simulatedPoint, '#ffff00', 'kG'); // Current kG
-
-    animationElement.textContent = `Iteration ${currentIteration}: Trying k = ${currentIteration}, kG = (${simulatedPoint.x.toFixed(2)}, ${simulatedPoint.y.toFixed(2)})`;
-
-    currentIteration++;
+    animationElement.textContent = `Trying k = ${currentKey.toString(16)}, kG = (${kG.x.toString(16)}, ${kG.y.toString(16)})`;
   }, 10); // Milliseconds between iterations
 
   drawEllipticCurve(); // Initial draw
 }
 
-// Start the animation on page load
+// Start the animation
 document.addEventListener('DOMContentLoaded', () => {
   startEllipticCurveCrackingAnimation();
 });
+</script>
 
-  </script>
+
 </body>
 </html>
