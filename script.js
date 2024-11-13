@@ -33,26 +33,57 @@ function toggleAudio() {
   audioPlaying = !audioPlaying;
 }
 
-// Decrypt Image and Check Answer
+// Set to track completed hashes
+const completedHashes = new Set();
+
 async function submitAnswer() {
   const answer = document.getElementById('answer').value.trim();
-  const storedHash = '9251f129e36d22db1b07c86a83bc9268948d98bd80be3b9c6eb8c48ed0ef22ac';
-  
-  // Hash the user's input
-  const answerHash = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(answer)
-  );
-  const hexHash = Array.from(new Uint8Array(answerHash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+  const challengeHeader = document.getElementById("challenge-header");
 
-  if (hexHash === storedHash) {
-    decryptImage(answer, 'http://localhost:8080/images/challenge2.png.enc');
-  } else {
-    alert('Incorrect answer! Try again.');
+  try {
+    // Fetch the hash-to-image mapping from the JSON file
+    const response = await fetch('assets/imageHashes.json');
+    const data = await response.json();
+
+    // Hash the user's input
+    const answerHash = await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(answer)
+    );
+    const hexHash = Array.from(new Uint8Array(answerHash))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    // Check if the hash is already completed
+    if (completedHashes.has(hexHash)) {
+      alert('Incorrect answer! Try again.');
+      return;
+    }
+
+    // Use the hash as a key to find the next image
+    const nextImage = data[hexHash];
+
+    if (nextImage) {
+      // Mark the current hash as completed
+      completedHashes.add(hexHash);
+
+      // Decrypt the next image
+      decryptImage(answer, `http://localhost:8080/images/${nextImage}.enc`);
+
+      // Increment the challenge number in the header
+      const currentChallenge = parseInt(challengeHeader.textContent.match(/\d+/), 10);
+      if (!isNaN(currentChallenge)) {
+        challengeHeader.textContent = `Challenge ${currentChallenge + 1}`;
+      }
+    } else {
+      alert('Incorrect answer! Try again.');
+    }
+  } catch (err) {
+    console.error('Error submitting answer:', err);
+    alert('An error occurred while processing your answer. Please try again.');
   }
 }
+
 
 // Decrypt Image Function
 async function decryptImage(password, imagePath) {
