@@ -466,6 +466,36 @@ function showWhiteRabbit() {
     return { attackerNode, victimNode };
   }
   
+  function getRandomIntBetween(x, y) {
+    return Math.floor(Math.random() * (y - x + 1)) + x;
+  }
+
+
+  function toggleBorderColor(isTracing) {
+    const canvas2 = document.getElementById('canvas2');
+    const progressContainer = document.querySelector('.progress-container');
+    const progress = document.querySelector('.progress');
+
+    if (isTracing) {
+      // Change to red during tracing with glow
+      canvas2.style.border = '2px solid red';
+      canvas2.style.boxShadow = '0 0 10px red, 0 0 20px red';
+      progressContainer.style.border = '2px solid red';
+      progressContainer.style.boxShadow = '0 0 10px red, 0 0 20px red';
+      progress.style.border = '2px solid red';
+      progress.style.boxShadow = '0 0 10px red, 0 0 20px red';
+    } else {
+      // Change to green during building with glow
+      canvas2.style.border = '2px solid #0f0';
+      canvas2.style.boxShadow = '0 0 10px #0f0, 0 0 20px #0f0';
+      progressContainer.style.border = '2px solid #0f0';
+      progressContainer.style.boxShadow = '0 0 10px #0f0, 0 0 20px #0f0';
+      progress.style.border = '2px solid #0f0';
+      progress.style.boxShadow = '0 0 10px #0f0, 0 0 20px #0f0';
+    }
+  }
+  
+
   // Generate a new route
   function generateRoute() {
     // Clear any pending timeouts
@@ -475,8 +505,7 @@ function showWhiteRabbit() {
     const { attackerNode, victimNode } = generateNodes();
     activeRoute = [attackerNode];
   
-    // Determine a random route length between 3 and 7
-     const routeLength = Math.floor(Math.random() * 5) + 3; // Random number between 3 and 7
+    const routeLength = getRandomIntBetween(4, numNodes/2);
 
     // Add intermediate nodes based on the random route length
     while (activeRoute.length < routeLength) {
@@ -550,6 +579,7 @@ function showWhiteRabbit() {
   
 
   function buildGreenRoute() {
+    toggleBorderColor(false); // Set to green
     isTracing = false; // Indicate we're building the green route
     if (buildIndex < activeRoute.length - 1) {
       buildIndex++;
@@ -570,6 +600,7 @@ function showWhiteRabbit() {
   
   
   function traceRedRoute() {
+    toggleBorderColor(true); // Set to red
     isTracing = true; // Indicate we're tracing the red route
     if (traceIndex > 0) {
       traceIndex--;
