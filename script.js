@@ -140,6 +140,7 @@ async function decryptFile(password, filePath) {
     document.getElementById('challenge-text').style.display = 'none';
     document.getElementById('challenge-audio').style.display = 'none';
     document.getElementById('challenge-video').style.display = 'none';
+    document.getElementById('challenge-iframe').style.display = 'none';
     document.getElementById('challenge-download').style.display = 'none';
 
     if (fileExtension === 'png' || fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'gif') {
@@ -152,6 +153,22 @@ async function decryptFile(password, filePath) {
       const textContent = new TextDecoder("utf-8").decode(decryptedData);
       document.getElementById('challenge-text').textContent = textContent;
       document.getElementById('challenge-text').style.display = 'block';
+    } else if (fileExtension === 'url') {
+      // Handle YouTube URLs
+      const urlContent = new TextDecoder("utf-8").decode(decryptedData).trim();
+      console.log("Decrypted URL Content:", urlContent);
+      if (urlContent.includes("youtube.com")) {
+        const videoId = urlContent.split("v=")[1]?.split("&")[0]; // Extract video ID
+        if (videoId) {
+          const iframe = document.getElementById('challenge-iframe');
+          iframe.src = `https://www.youtube.com/embed/${videoId}`;
+          iframe.style.display = 'block';
+        } else {
+          throw new Error("Invalid YouTube URL format.");
+        }
+      } else {
+        throw new Error("Unsupported URL format in .url file.");
+      }
     } else if (fileExtension === 'mp3' || fileExtension === 'wav') {
       // Handle audio files
       const base64Audio = btoa(String.fromCharCode(...decryptedData));
@@ -176,6 +193,7 @@ async function decryptFile(password, filePath) {
     console.error(err);
   }
 }
+
 
   
 

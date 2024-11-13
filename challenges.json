@@ -14,5 +14,14 @@
     {
         "file": "challenge5.txt",
         "password": "cat"
+    },
+    {
+        "file": "challenge6.mp3",
+        "password": "21"
+    },
+    {
+        "file": "challenge7.url",
+        "password": "Bilbo"
     }
+
 ]
