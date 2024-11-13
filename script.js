@@ -68,7 +68,7 @@ async function submitAnswer() {
       completedHashes.add(hexHash);
 
       // Decrypt the next image
-      decryptImage(answer, `http://localhost:8080/images/${nextImage}.enc`);
+      decryptImage(answer, `images/${nextImage}.enc`);
 
       // Increment the challenge number in the header
       const currentChallenge = parseInt(challengeHeader.textContent.match(/\d+/), 10);
