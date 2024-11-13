@@ -477,29 +477,86 @@ function showWhiteRabbit() {
     buildGreenRoute(); // Start building the green route
   }
   
+  let packetProgress = 0; // Tracks packet animation progress
+  let packetEdge = null; // Current edge for packet animation
+  
+  function drawPacket() {
+    if (!packetEdge) return;
+  
+    const { fromNode, toNode, color } = packetEdge;
+    const from2D = project3DTo2D(fromNode);
+    const to2D = project3DTo2D(toNode);
+  
+    // Interpolate packet position
+    const x = from2D.x + (to2D.x - from2D.x) * packetProgress;
+    const y = from2D.y + (to2D.y - from2D.y) * packetProgress;
+  
+    // Draw packet as a small circle
+    ctx2.fillStyle = color;
+    ctx2.beginPath();
+    ctx2.arc(x, y, 4, 0, 2 * Math.PI); // Adjust size as needed
+    ctx2.fill();
+  }
+  
+  
+  function triggerPacketAnimation(edgeIndex, isTracing = false) {
+    const fromNode = isTracing
+      ? activeRoute[edgeIndex + 1] // Reverse direction for red route
+      : activeRoute[edgeIndex];
+    const toNode = isTracing
+      ? activeRoute[edgeIndex] // Reverse direction for red route
+      : activeRoute[edgeIndex + 1];
+  
+    if (!fromNode || !toNode) {
+      console.error('Invalid nodes for packet animation:', { fromNode, toNode });
+      return;
+    }
+  
+    // Assign color based on tracing or building
+    const color = isTracing ? 'red' : '#0f0';
+  
+    packetEdge = { fromNode, toNode, color };
+    packetProgress = 0;
+  
+    const packetInterval = setInterval(() => {
+      packetProgress += 0.05; // Adjust speed
+  
+      if (packetProgress >= 1) {
+        packetProgress = 1;
+        packetEdge = null;
+        clearInterval(packetInterval);
+      }
+    }, 50); // Adjust speed as needed
+  }
+  
+  
+
   function buildGreenRoute() {
     if (buildIndex < activeRoute.length - 1) {
-      // Add the next segment to the green route
       buildIndex++;
       calculateRotationToNode(activeRoute[buildIndex]); // Rotate to the next node
-      buildRouteTimeout = setTimeout(buildGreenRoute, 2000); // Trigger the next segment after rotation
+      triggerPulse(); // Add pulse effect
+      triggerPacketAnimation(buildIndex - 1, false); // Animate green packet
+      buildRouteTimeout = setTimeout(buildGreenRoute, 2000); // Trigger the next segment
     } else {
-      // Once green route is fully built, start tracing after a short delay
       traceRouteTimeout = setTimeout(traceRedRoute, 2000);
     }
   }
   
   function traceRedRoute() {
     if (traceIndex > 0) {
-      // Trace the next segment of the red route
       traceIndex--;
       calculateRotationToNode(activeRoute[traceIndex]); // Rotate to the next node
-      traceRouteTimeout = setTimeout(traceRedRoute, 2000); // Trigger the next segment after rotation
+      triggerPulse(true); // Add pulse effect
+      triggerPacketAnimation(traceIndex, true); // Animate red packet
+      traceRouteTimeout = setTimeout(traceRedRoute, 2000);
     } else {
-      // Once red route is fully traced, generate a new route after a delay
       setTimeout(generateRoute, 2000);
     }
   }
+  
+  
+  
   
   // Smooth rotation to center the target node
   function rotateCameraToTarget() {
@@ -627,32 +684,65 @@ function showWhiteRabbit() {
     });
   }
   
-
+  let pulseProgress = 0; // Tracks pulse animation progress
+  let isPulsing = false; // Is the animation active?
   
-  // Draw the route
   function drawRoute() {
     ctx2.lineWidth = 2;
   
     for (let i = 0; i < activeRoute.length - 1; i++) {
       const fromNode = activeRoute[i];
       const toNode = activeRoute[i + 1];
+  
+      if (!fromNode || !toNode) {
+        console.error('Invalid nodes in drawRoute:', { fromNode, toNode });
+        continue; // Skip invalid edges
+      }
+  
       const from2D = project3DTo2D(fromNode);
       const to2D = project3DTo2D(toNode);
   
-      if (i >= traceIndex - 1) {
-        ctx2.strokeStyle = 'red'; // Red for traced segments
-      } else if (i < buildIndex) {
-        ctx2.strokeStyle = '#0f0'; // Green for built route
+      // Determine the edge color and direction based on the route state
+      if (i <= buildIndex) {
+        // Green route building
+        ctx2.strokeStyle = isPulsing && i === buildIndex - 1
+          ? `rgba(0, 255, 0, ${0.5 + 0.5 * Math.sin(pulseProgress)})` // Pulsing effect
+          : '#0f0'; // Default green
+      } else if (i >= traceIndex) {
+        // Red route tracing
+        ctx2.strokeStyle = isPulsing && i === traceIndex
+          ? `rgba(255, 0, 0, ${0.5 + 0.5 * Math.sin(pulseProgress)})` // Pulsing effect
+          : 'red'; // Default red
       } else {
-        ctx2.strokeStyle = 'gray'; // Gray for unconnected segments
+        // Default color for unvisited edges
+        ctx2.strokeStyle = 'gray';
       }
   
+      // Draw the edge
       ctx2.beginPath();
       ctx2.moveTo(from2D.x, from2D.y);
       ctx2.lineTo(to2D.x, to2D.y);
       ctx2.stroke();
     }
   }
+  
+  
+  
+  
+  function triggerPulse(isTracing = false) {
+    isPulsing = true;
+    pulseProgress = 0;
+  
+    const pulseInterval = setInterval(() => {
+      pulseProgress += 0.2; // Increment the pulse phase
+  
+      if (pulseProgress > Math.PI * 4) { // End after two pulses
+        isPulsing = false;
+        clearInterval(pulseInterval);
+      }
+    }, 50); // Adjust speed as needed
+  }
+  
   
   // Animation loop
   function animateSphere() {
@@ -662,10 +752,26 @@ function showWhiteRabbit() {
   
     drawRoute();
     drawNodes();
+    drawPacket();
   
     requestAnimationFrame(animateSphere);
   }
   
+  function incrementBuildRoute() {
+    if (buildIndex < activeRoute.length - 1) {
+      buildIndex++;
+      triggerPulse(); // Trigger pulse when the route expands
+    }
+  }
+  
+  function incrementTraceRoute() {
+    if (traceIndex > 0) {
+      traceIndex--;
+      triggerPulse(); // Trigger pulse when tracing back
+    }
+  }
+
+
   // Initialize and run the simulation
   generateRoute();
   animateSphere();
