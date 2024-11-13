@@ -1,0 +1,27 @@
+[
+    {
+        "file": "challenge2.png",
+        "password": "a"
+    },
+    {
+        "file": "challenge3.jpg",
+        "password": "b"
+    },
+    {
+        "file": "challenge4.jpg",
+        "password": "c"
+    },
+    {
+        "file": "challenge5.txt",
+        "password": "d"
+    },
+    {
+        "file": "challenge6.mp3",
+        "password": "e"
+    },
+    {
+        "file": "challenge7.url",
+        "password": "f"
+    }
+
+]

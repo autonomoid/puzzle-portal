@@ -1,3 +1,5 @@
 venv/
 *.csv
 *.log
+challenge_source_files/
+challenges.json
