@@ -561,10 +561,10 @@ function showWhiteRabbit() {
       const progress = ((buildIndex + 1) / activeRoute.length) * 100;
       updateProgressBar(progress, false);
       
-      buildRouteTimeout = setTimeout(buildGreenRoute, 2000); // Trigger next segment
+      buildRouteTimeout = setTimeout(buildGreenRoute, 5000); // Trigger next segment
     } else {
       // Start tracing the red route
-      traceRouteTimeout = setTimeout(traceRedRoute, 2000);
+      traceRouteTimeout = setTimeout(traceRedRoute, 5000);
     }
   }
   
@@ -581,10 +581,10 @@ function showWhiteRabbit() {
       const progress = ((activeRoute.length - traceIndex) / activeRoute.length) * 100;
       updateProgressBar(progress, true);
       
-      traceRouteTimeout = setTimeout(traceRedRoute, 2000); // Trigger next segment
+      traceRouteTimeout = setTimeout(traceRedRoute, 5000); // Trigger next segment
     } else {
       // Generate a new route after tracing is complete
-      setTimeout(generateRoute, 2000);
+      setTimeout(generateRoute, 5000);
     }
   }
   
@@ -699,7 +699,6 @@ function showWhiteRabbit() {
     gradient.addColorStop(0.7, baseColor); // Base color dynamically set
     gradient.addColorStop(1, `rgba(0, 0, 0, 0)`); // Transparent shadow
 
-  
       // Draw the sphere
       ctx2.fillStyle = gradient;
       ctx2.beginPath();
@@ -756,10 +755,6 @@ function showWhiteRabbit() {
     }
   }
   
-  
-  
-  
-  
   function triggerPulse() {
     if (isPulsing) return; // Prevent multiple pulses
   
@@ -774,10 +769,7 @@ function showWhiteRabbit() {
         clearInterval(pulseInterval);
       }
     }, 50); // Adjust speed as needed
-  }
-  
-
-  
+  } 
   
   // Animation loop
   function animateSphere() {
