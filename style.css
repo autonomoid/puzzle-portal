@@ -362,15 +362,20 @@ button:active {
   box-shadow: 0 0 10px #0f0; /* Add a neon glow effect */
 }
 
-.progress-container {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  width: calc(100% - 20px); /* Ensure it spans the width of the canvas */
-  z-index: 1;
+.progress {
+  background-color: transparent !important; /* Ensure no background for the container */
+  border: 2px solid #0f0; /* Optional: Green border */
+  box-shadow: 0 0 10px #0f0; /* Optional: Neon glow */
+  border-radius: 5px; /* Rounded corners for aesthetic */
+  overflow: hidden; /* Ensure the bar stays inside the container */
 }
 
 .progress-bar {
-  transition: width 0.5s ease; /* Smooth animation for the progress bar */
+  background-color: #0f0; /* Green bar for building */
+  height: 100%; /* Ensure full height inside the container */
+  transition: width 0.5s ease; /* Smooth animation for width */
 }
 
+.progress-bar.bg-danger {
+  background-color: red; /* Red bar for tracing */
+}

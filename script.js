@@ -3,9 +3,18 @@ const progressBar = document.getElementById('progress-bar');
 function updateProgressBar(progress, isTracing) {
   progressBar.style.width = `${progress}%`;
   progressBar.setAttribute('aria-valuenow', progress);
-  progressBar.classList.toggle('bg-success', !isTracing); // Green for building
-  progressBar.classList.toggle('bg-danger', isTracing);  // Red for tracing
+
+  if (isTracing) {
+    // For red trace (reverse direction)
+    progressBar.classList.add('bg-danger'); // Red for tracing
+    progressBar.classList.remove('bg-success'); // Remove green class
+  } else {
+    // For green route building (normal direction)
+    progressBar.classList.add('bg-success'); // Green for building
+    progressBar.classList.remove('bg-danger'); // Remove red class
+  }
 }
+
 
 // Audio Control
 let audioPlaying = false;
