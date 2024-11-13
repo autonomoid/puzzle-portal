@@ -5,15 +5,16 @@ function updateProgressBar(progress, isTracing) {
   progressBar.setAttribute('aria-valuenow', progress);
 
   if (isTracing) {
-    // For red trace (reverse direction)
-    progressBar.classList.add('bg-danger'); // Red for tracing
-    progressBar.classList.remove('bg-success'); // Remove green class
+    // Gradient for red trace (reverse direction)
+    progressBar.style.background = `linear-gradient(90deg, #ff0000, #ff7700)`;
+    progressBar.style.transition = 'width 0.5s ease, background 0.5s ease'; // Smooth transition
   } else {
-    // For green route building (normal direction)
-    progressBar.classList.add('bg-success'); // Green for building
-    progressBar.classList.remove('bg-danger'); // Remove red class
+    // Gradient for green route building (normal direction)
+    progressBar.style.background = `linear-gradient(90deg, #00ff00, #0077ff)`;
+    progressBar.style.transition = 'width 0.5s ease, background 0.5s ease'; // Smooth transition
   }
 }
+
 
 
 // Audio Control
