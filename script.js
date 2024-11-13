@@ -85,7 +85,6 @@ async function submitAnswer() {
 }
 
 
-// Decrypt File Function
 async function decryptFile(password, filePath) {
   try {
     // Fetch the encrypted file data
@@ -136,25 +135,47 @@ async function decryptFile(password, filePath) {
     // Determine file type by extension
     const fileExtension = filePath.split('.').slice(-2, -1)[0].toLowerCase();
 
+    // Hide all elements first
+    document.getElementById('challenge-image').style.display = 'none';
+    document.getElementById('challenge-text').style.display = 'none';
+    document.getElementById('challenge-audio').style.display = 'none';
+    document.getElementById('challenge-video').style.display = 'none';
+    document.getElementById('challenge-download').style.display = 'none';
+
     if (fileExtension === 'png' || fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'gif') {
       // Handle image files
       const base64Image = btoa(String.fromCharCode(...decryptedData));
       document.getElementById('challenge-image').src = `data:image/${fileExtension};base64,${base64Image}`;
-      document.getElementById('challenge-text').textContent = ''; // Clear text content
+      document.getElementById('challenge-image').style.display = 'block';
     } else if (fileExtension === 'txt') {
       // Handle text files
       const textContent = new TextDecoder("utf-8").decode(decryptedData);
-      document.getElementById('challenge-image').src = ''; // Clear image content
-      document.getElementById('challenge-text').textContent = textContent; // Set text content
+      document.getElementById('challenge-text').textContent = textContent;
+      document.getElementById('challenge-text').style.display = 'block';
+    } else if (fileExtension === 'mp3' || fileExtension === 'wav') {
+      // Handle audio files
+      const base64Audio = btoa(String.fromCharCode(...decryptedData));
+      document.getElementById('challenge-audio').src = `data:audio/${fileExtension};base64,${base64Audio}`;
+      document.getElementById('challenge-audio').style.display = 'block';
+    } else if (fileExtension === 'mp4' || fileExtension === 'webm') {
+      // Handle video files
+      const base64Video = btoa(String.fromCharCode(...decryptedData));
+      document.getElementById('challenge-video').src = `data:video/${fileExtension};base64,${base64Video}`;
+      document.getElementById('challenge-video').style.display = 'block';
     } else {
-      throw new Error(`Unsupported file type: ${fileExtension}`);
+      // Handle other file types (download)
+      const blob = new Blob([decryptedData], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+      const downloadLink = document.getElementById('challenge-download');
+      downloadLink.href = url;
+      downloadLink.download = filePath.split('/').pop().replace('.enc', ''); // Remove `.enc` extension
+      downloadLink.style.display = 'block';
     }
   } catch (err) {
     alert('Error decrypting the data. Make sure your answer is correct.');
     console.error(err);
   }
 }
-
 
   
 

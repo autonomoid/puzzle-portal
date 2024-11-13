@@ -43,8 +43,20 @@
             <h1 id="challenge-header" class="neon-text">Challenge 1</h1>
         </div>
         <div class="card-body">
-            <img src="challenge_files/challenge1.jpg" id="challenge-image" class="img-fluid">
-            <p id="challenge-text"></p>
+          <!-- For images -->
+          <img src="challenge_files\challenge1.jpg" id="challenge-image" class="img-fluid">
+          
+          <!-- For text -->
+          <p id="challenge-text" style="display: none;"></p>
+          
+          <!-- For audio -->
+          <audio id="challenge-audio" controls style="display: none;"></audio>
+          
+          <!-- For video -->
+          <video id="challenge-video" controls class="img-fluid" style="display: none;"></video>
+          
+          <!-- For other file types -->
+          <a id="challenge-download" href="" download style="display: none;">Download File</a>
         </div>
     </div>
     <div id="response-area" class="card mt-3">
