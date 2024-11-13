@@ -5,20 +5,20 @@ from Crypto.Random import get_random_bytes
 import json
 import os
 
-def encrypt_file_for_js(image_path, password, output_file):
+def encrypt_file_for_js(file_path, password, output_file):
     # Create a key from the password using SHA-256
     key = SHA256.new(password.encode()).digest()
 
     # Generate a random IV (16 bytes for AES)
     iv = get_random_bytes(16)
 
-    # Read the image data
-    with open(image_path, 'rb') as f:
-        image_data = f.read()
+    # Read the data
+    with open(file_path, 'rb') as f:
+        file_data = f.read()
 
-    # Pad the image data to make its length a multiple of 16
-    pad_length = 16 - (len(image_data) % 16)
-    padded_data = image_data + bytes([pad_length] * pad_length)
+    # Pad the data to make its length a multiple of 16
+    pad_length = 16 - (len(file_data) % 16)
+    padded_data = file_data + bytes([pad_length] * pad_length)
 
     # Encrypt the data using AES-CBC
     cipher = AES.new(key, AES.MODE_CBC, iv)
@@ -34,7 +34,7 @@ def encrypt_file_for_js(image_path, password, output_file):
     with open(output_file, 'w') as f:
         f.write(encrypted_base64)
 
-    print(f"Encrypted image saved to {output_file} as Base64.")
+    print(f"Encrypted file saved to {output_file} as Base64.")
 
 
 def process_challenges_from_config(source_folder, config_file, output_folder, output_json):
@@ -45,7 +45,7 @@ def process_challenges_from_config(source_folder, config_file, output_folder, ou
     hashes = {}
 
     for entry in config:
-        file_name = entry['image']
+        file_name = entry['file']
         password = entry['password']
 
         # Construct full paths for the source and output files
@@ -69,7 +69,7 @@ def process_challenges_from_config(source_folder, config_file, output_folder, ou
     with open(output_json, 'w') as f:
         json.dump(hashes, f, indent=4)
 
-    print(f"Image hashes saved to {output_json}.")
+    print(f"Hashes saved to {output_json}.")
 
 
 # Example usage

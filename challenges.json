@@ -1,14 +1,18 @@
 [
     {
-        "image": "challenge2.png",
+        "file": "challenge2.png",
         "password": "caffeine"
     },
     {
-        "image": "challenge3.jpg",
+        "file": "challenge3.jpg",
         "password": "42"
     },
     {
-        "image": "challenge4.jpg",
+        "file": "challenge4.jpg",
         "password": "dog"
+    },
+    {
+        "file": "challenge5.txt",
+        "password": "cat"
     }
 ]

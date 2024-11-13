@@ -68,7 +68,7 @@ async function submitAnswer() {
       completedHashes.add(hexHash);
 
       // Decrypt the next image
-      decryptImage(answer, `challenge_files/${nextImage}.enc`);
+      decryptFile(answer, `challenge_files/${nextImage}.enc`);
 
       // Increment the challenge number in the header
       const currentChallenge = parseInt(challengeHeader.textContent.match(/\d+/), 10);
@@ -85,11 +85,11 @@ async function submitAnswer() {
 }
 
 
-// Decrypt Image Function
-async function decryptImage(password, imagePath) {
-try {
-    // Fetch the encrypted image data
-    const response = await fetch(imagePath);
+// Decrypt File Function
+async function decryptFile(password, filePath) {
+  try {
+    // Fetch the encrypted file data
+    const response = await fetch(filePath);
     const encryptedBase64 = await response.text(); // Assuming the encrypted data is Base64 encoded
     const encryptedBlob = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
 
@@ -100,18 +100,18 @@ try {
     // Derive the cryptographic key from the password
     const passwordKey = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password)); // SHA-256 hash of the password
     const key = await crypto.subtle.importKey(
-        "raw",
-        passwordKey,
-        { name: "AES-CBC" },
-        false,
-        ["decrypt"]
+      "raw",
+      passwordKey,
+      { name: "AES-CBC" },
+      false,
+      ["decrypt"]
     );
 
     // Decrypt the data
     const decryptedData = await crypto.subtle.decrypt(
-    { name: "AES-CBC", iv: iv },
-    key,
-    encryptedContent
+      { name: "AES-CBC", iv: iv },
+      key,
+      encryptedContent
     );
 
     // Remove PKCS#7 padding
@@ -119,16 +119,28 @@ try {
     const paddingLength = decryptedArray[decryptedArray.length - 1];
     const unpaddedData = decryptedArray.slice(0, decryptedArray.length - paddingLength);
 
-    // Convert decrypted data to Base64 and display the image
-    const base64Image = btoa(
-    String.fromCharCode(...unpaddedData)
-    );
-    document.getElementById('challenge-image').src = 'data:image/png;base64,' + base64Image;
-} catch (err) {
-    alert('Error decrypting the image. Make sure your answer is correct.');
+    // Determine the original file extension by removing `.enc`
+    const fileExtension = filePath.split('.').slice(-2, -1)[0].toLowerCase();
+
+    if (fileExtension === 'png' || fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'gif') {
+      // It's an image file
+      const base64Image = btoa(String.fromCharCode(...unpaddedData));
+      document.getElementById('challenge-image').src = 'data:image/' + fileExtension + ';base64,' + base64Image;
+      document.getElementById('challenge-text').textContent = ''; // Clear text content
+    } else if (fileExtension === 'txt') {
+      // It's a text file
+      const textContent = new TextDecoder().decode(unpaddedData); // Decode entire content
+      document.getElementById('challenge-image').src = ''; // Clear image content
+      document.getElementById('challenge-text').textContent = textContent; // Set text content
+    } else {
+      throw new Error('Unsupported file type: ' + fileExtension);
+    }
+  } catch (err) {
+    alert('Error decrypting the data. Make sure your answer is correct.');
     console.error(err);
+  }
 }
-}
+
   
 
 // Matrix Effect
