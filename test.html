@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECC Brute Force Visualization</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background-color: #0d1117;
+      color: #00ff00;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      border: 1px solid #333;
+      background-color: #1e1e2f;
+      position: relative;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    .problem-statement {
+      font-size: 18px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .password-cracking-panel {
+      width: 80%;
+      background-color: #1e1e2f;
+      color: #00ff00;
+      padding: 10px;
+      margin-top: 20px;
+      border: 1px solid #333;
+      border-radius: 5px;
+      max-height: 200px;
+      overflow: auto;
+      text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+    }
+    #cracking-animation {
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="problem-statement">
+    Solving: <b>Q = kG</b><br>
+    Curve: <b>y² = x³ + ax + b</b>, a = 0, b = 7 (secp256k1)<br>
+    Base Point G: <b>(2, 5)</b><br>
+    Target Point Q: <b>(25, 30)</b>
+  </div>
+  <canvas id="curve-canvas" width="800" height="400"></canvas>
+  <div class="password-cracking-panel">
+    <pre id="cracking-animation"></pre>
+  </div>
+  <script>
+function startEllipticCurveCrackingAnimation() {
+  const animationElement = document.getElementById('cracking-animation');
+  const canvas = document.getElementById('curve-canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Curve parameters for secp256k1
+  const a = 0; // Coefficient for x
+  const b = 7; // Constant
+  const scale = 10; // Scale factor for visual clarity
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // Fake ECC parameters for simulation
+  const basePoint = { x: 2, y: 5 }; // Base point G
+  const targetPoint = { x: 25, y: 30 }; // Public key Q = kG
+  const maxIterations = 500; // Total brute-force attempts
+  const correctKey = 409; // Fake "k" that satisfies kG = Q
+
+  let currentIteration = 0;
+  const pathPoints = []; // Array to store all attempted points
+
+  // Function to simulate unique point progression
+  function generatePoint(k) {
+    return {
+      x: basePoint.x * k % 100 + Math.sin(k) * 5, // Adding variation for uniqueness
+      y: basePoint.y * k % 100 + Math.cos(k) * 5,
+    };
+  }
+
+  // Draw the grid
+  function drawGrid() {
+    ctx.strokeStyle = '#003300'; // Dark green grid
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x < width; x += 20) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < height; y += 20) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+  }
+
+  // Draw the elliptic curve
+  function drawEllipticCurve() {
+    ctx.clearRect(0, 0, width, height);
+    drawGrid();
+    ctx.beginPath();
+    for (let x = -width / (2 * scale); x <= width / (2 * scale); x += 0.1) {
+      const ySquared = x ** 3 + a * x + b;
+      if (ySquared >= 0) {
+        const y1 = Math.sqrt(ySquared);
+        const y2 = -Math.sqrt(ySquared);
+        ctx.fillRect(scale * x + width / 2, -scale * y1 + height / 2, 2, 2);
+        ctx.fillRect(scale * x + width / 2, -scale * y2 + height / 2, 2, 2);
+      }
+    }
+    ctx.strokeStyle = '#00ff00'; // Bright green curve
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Draw a point on the curve
+  function drawPoint(point, color, label) {
+    ctx.beginPath();
+    ctx.arc(
+      scale * point.x + width / 2,
+      -scale * point.y + height / 2,
+      5,
+      0,
+      2 * Math.PI
+    );
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.fillStyle = '#00ff00'; // Label color
+    ctx.font = '14px Courier New';
+    ctx.fillText(label, scale * point.x + width / 2 + 8, -scale * point.y + height / 2 - 8);
+  }
+
+  // Draw the path of attempted points
+  function drawPath() {
+    if (pathPoints.length < 2) return;
+
+    ctx.beginPath();
+    ctx.moveTo(
+      scale * pathPoints[0].x + width / 2,
+      -scale * pathPoints[0].y + height / 2
+    );
+
+    for (let i = 1; i < pathPoints.length; i++) {
+      ctx.lineTo(
+        scale * pathPoints[i].x + width / 2,
+        -scale * pathPoints[i].y + height / 2
+      );
+    }
+
+    ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)'; // Faint yellow path
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Simulate brute-forcing
+  const crackingInterval = setInterval(() => {
+    if (currentIteration >= maxIterations) {
+      clearInterval(crackingInterval);
+      animationElement.textContent += `\n[+] Failed to find the key within ${maxIterations} iterations.`;
+      return;
+    }
+
+    // Simulate finding the key
+    if (currentIteration === correctKey) {
+      clearInterval(crackingInterval);
+      drawPoint(targetPoint, '#ff0000', 'Q'); // Highlight the target point
+      animationElement.textContent += `\n[+] Key Found: k = ${correctKey}`;
+      return;
+    }
+
+    // Generate a unique point for kG
+    const simulatedPoint = generatePoint(currentIteration);
+
+    pathPoints.push(simulatedPoint); // Track the point
+    drawEllipticCurve();
+    drawPath(); // Draw the path of attempts
+    drawPoint(basePoint, '#0000ff', 'G'); // Base point G
+    drawPoint(targetPoint, '#ff0000', 'Q'); // Target point Q
+    drawPoint(simulatedPoint, '#ffff00', 'kG'); // Current kG
+
+    animationElement.textContent = `Iteration ${currentIteration}: Trying k = ${currentIteration}, kG = (${simulatedPoint.x.toFixed(2)}, ${simulatedPoint.y.toFixed(2)})`;
+
+    currentIteration++;
+  }, 10); // Milliseconds between iterations
+
+  drawEllipticCurve(); // Initial draw
+}
+
+// Start the animation on page load
+document.addEventListener('DOMContentLoaded', () => {
+  startEllipticCurveCrackingAnimation();
+});
+
+  </script>
+</body>
+</html>
