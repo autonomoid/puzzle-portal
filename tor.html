@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hacker Log Feed</title>
+  <link rel="stylesheet" href="tor.css">
+</head>
+<body>
+  <div class="terminal">
+    <input type="number" id="nodeCount" placeholder="Enter number of nodes (5-10)" min="5" max="10" class="node-input">
+    <button id="triggerButton" class="trigger-button">Establish New Circuit</button>
+    <div class="log-feed" id="logFeed"></div>
+  </div>
+  <script src="tor.js"></script>
+</body>
+</html>

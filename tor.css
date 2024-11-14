@@ -1,0 +1,104 @@
+/* General page styling */
+body {
+    background-color: black;
+    color: #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+/* Terminal container */
+.terminal {
+    width: 80%;
+    height: 70%;
+    background-color: #101010;
+    border: 2px solid #00ff00;
+    overflow: hidden;
+    padding: 10px;
+    box-shadow: 0 0 10px #00ff00;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
+}
+
+/* Log feed container */
+.log-feed {
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    font-size: 1rem;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    word-wrap: break-word;
+    margin-top: 10px;
+}
+
+/* Trigger button */
+.trigger-button {
+    background-color: #00ff00;
+    color: black;
+    border: none;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    align-self: center;
+}
+
+.trigger-button:hover {
+    background-color: #00cc00;
+}
+
+/* Node count input */
+.node-input {
+    background-color: #101010;
+    color: #00ff00;
+    border: 1px solid #00ff00;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    padding: 5px;
+    width: 50%;
+    text-align: center;
+}
+
+.node-input::placeholder {
+    color: #00ff00;
+}
+
+/* Style for IP addresses */
+.ip-address {
+    color: cyan;
+    font-weight: bold;
+}
+
+/* Style for exit nodes */
+.exit-node {
+    color: red;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* Fade-in animation */
+.log-feed div {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
